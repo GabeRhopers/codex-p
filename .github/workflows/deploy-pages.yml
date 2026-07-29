@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    # NOTE: this repo currently has only one branch
+    # (claude/seasons-battle-capacity-hp09cp) — there is no `main` yet. Once
+    # this work lands on whatever branch becomes the permanent default,
+    # update this trigger to point there instead.
+    branches: [claude/seasons-battle-capacity-hp09cp]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; let an in-flight run finish rather than
+# cancelling it mid-upload.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc -b
+      # GitHub Pages project sites are served from /<repo-name>/, not /,
+      # so the build needs that as its base path for asset URLs to resolve.
+      - run: npx vite build --base=/codex-p/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
