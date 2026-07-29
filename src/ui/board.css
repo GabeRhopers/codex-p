@@ -31,11 +31,27 @@
   box-sizing: border-box;
 }
 
+html {
+  /* Prevent the double-tap-to-zoom delay on touch devices without
+     disabling pinch-zoom entirely (accessibility: never set
+     user-scalable=no / maximum-scale=1 in the viewport meta tag). */
+  touch-action: manipulation;
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Deliberately NOT setting overflow-x: hidden here as a page-level
+     "safety net" — per spec, a non-visible overflow-x forces overflow-y to
+     compute as auto, which would make body (rather than the viewport)
+     the scroll container and can break mobile Safari's address-bar-hide
+     behavior and position: sticky. The actual fix is .lane-row owning its
+     own horizontal scroll instead of letting it bleed into the page; this
+     is verified empirically (see mobile Playwright check) rather than
+     papered over here.
+  */
 }
 
 .app {
@@ -43,6 +59,21 @@ body {
   padding: 1rem;
   display: flex;
   justify-content: center;
+}
+
+.app > * {
+  /* Flex items default to min-width: auto, which floors their shrunk size
+     at their content's intrinsic minimum and can silently push a whole
+     branch of the tree wider than the viewport (with the overflow only
+     visible as elements rendered partway off-screen, not as a document
+     scrollbar). Breaking that chain here is the standard fix. */
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 0.5rem;
+  }
 }
 
 .board {
@@ -65,10 +96,35 @@ body {
   padding: 0.75rem 1rem;
 }
 
+.board-header > * {
+  min-width: 0;
+}
+
+@media (max-width: 480px) {
+  .board-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .turn-info {
+    order: 1;
+  }
+
+  .btn-end-turn {
+    order: 2;
+  }
+}
+
 .score {
   display: flex;
   gap: 1rem;
   font-weight: 600;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.score > * {
+  min-width: 0;
 }
 
 .score-you {
@@ -107,11 +163,25 @@ body {
 .lane-row {
   display: flex;
   gap: 0.5rem;
-  justify-content: center;
+  /* The 5 lanes don't shrink to fit (see .lane-slot's flex-shrink: 0) — on
+     a narrow viewport this row scrolls horizontally within its own box
+     instead of overflowing the page or squashing cards illegible. Lane
+     order is rules-significant (adjacency drives Range and position
+     changes), so cards wrap to a second row rather than scroll here —
+     that would break the left-to-right mental model. */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 0.5rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: -0.35rem;
 }
 
 .lane-slot {
   width: 120px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .lane-empty {
@@ -127,6 +197,8 @@ body {
 
 .lane-slot-wide {
   width: 250px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
 .lane-slot-wide .card {
@@ -137,6 +209,32 @@ body {
     color-mix(in srgb, var(--panel-2) 85%, var(--text-dim)) 10px,
     color-mix(in srgb, var(--panel-2) 85%, var(--text-dim)) 20px
   );
+}
+
+@media (max-width: 480px) {
+  /* Shrink the battlefield cards so ~3 lanes are visible at once on a
+     typical phone width instead of ~1.5 — the rest is a horizontal swipe
+     away via .lane-row's scroll container above, not squashed or hidden. */
+  .lane-slot {
+    width: 96px;
+  }
+
+  .lane-slot-wide {
+    width: 200px;
+  }
+
+  .card {
+    height: 132px;
+    padding: 0.35rem;
+  }
+
+  .card-name {
+    font-size: 0.72rem;
+  }
+
+  .lane-empty {
+    height: 132px;
+  }
 }
 
 .bench-row {
@@ -288,6 +386,8 @@ body {
   padding: 0.75rem 1rem;
   position: sticky;
   bottom: 0.5rem;
+  z-index: 5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 .action-panel-title {
@@ -309,6 +409,10 @@ body {
   padding: 0.5rem 0.8rem;
   font-size: 0.85rem;
   cursor: pointer;
+  /* Apple/Google's touch-target guidance is ~44px; this applies on every
+     size, not just a mobile media query, since a bigger tap target never
+     hurts a mouse user. */
+  min-height: 44px;
 }
 
 .btn:hover {
