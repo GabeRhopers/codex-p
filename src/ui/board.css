@@ -27,6 +27,28 @@
   }
 }
 
+/* An explicit theme choice (e.g. a host page's own light/dark toggle,
+   stamped as data-theme on the root) wins over the OS-level media query
+   in both directions — same token values as above, just re-declared under
+   a selector with higher precedence than the media query alone. */
+:root[data-theme='dark'] {
+  --bg: #14161f;
+  --panel: #1e2130;
+  --panel-2: #262a3d;
+  --text: #e8e8f0;
+  --text-dim: #9a9fb5;
+  --border: #383d55;
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f4f9;
+  --panel: #ffffff;
+  --panel-2: #eceef7;
+  --text: #1c1e2a;
+  --text-dim: #5a5f77;
+  --border: #d3d6e6;
+}
+
 * {
   box-sizing: border-box;
 }
