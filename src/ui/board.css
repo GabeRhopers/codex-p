@@ -144,44 +144,104 @@ body {
   color: var(--accent);
 }
 
-.player-lanes {
+/* ------------------------------------------------------------------ */
+/* Arena — the central battlefield grid.                              */
+/*                                                                     */
+/* Both players' 5 lanes and the lane-number divider between them are */
+/* rows of ONE CSS Grid sharing the same grid-template-columns. That's */
+/* what makes "what's in front of what" a structural guarantee rather */
+/* than a visual coincidence: a card in column 3 of the opponent row  */
+/* occupies exactly the same horizontal space as column 3 of the      */
+/* player's row, automatically, including for a Titan's 2-column span.*/
+/* The whole grid is one scroll unit on narrow viewports, so the two  */
+/* rows can never scroll independently and drift out of alignment.    */
+/* ------------------------------------------------------------------ */
+
+.arena-scroll {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-}
-
-.player-lanes h2 {
-  margin: 0 0 0.5rem;
-  font-size: 0.95rem;
-  color: var(--text-dim);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.lane-row {
-  display: flex;
-  gap: 0.5rem;
-  /* The 5 lanes don't shrink to fit (see .lane-slot's flex-shrink: 0) — on
-     a narrow viewport this row scrolls horizontally within its own box
-     instead of overflowing the page or squashing cards illegible. Lane
-     order is rules-significant (adjacency drives Range and position
-     changes), so cards wrap to a second row rather than scroll here —
-     that would break the left-to-right mental model. */
+  padding: 0.75rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
   scroll-padding-inline: 0.5rem;
-  padding-bottom: 0.35rem;
-  margin-bottom: -0.35rem;
 }
 
-.lane-slot {
-  width: 120px;
-  flex-shrink: 0;
+.arena-grid {
+  display: grid;
+  grid-template-columns: 74px repeat(5, 120px);
+  grid-template-rows: auto auto auto;
+  column-gap: 0.4rem;
+  row-gap: 0.5rem;
+  align-items: center;
+  position: relative;
+}
+
+.arena-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--panel);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-right: 0.4rem;
+  line-height: 1.15;
+}
+
+.arena-label-divider {
+  font-weight: 400;
+  text-transform: none;
+  opacity: 0.7;
+}
+
+.arena-divider-cell {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  z-index: 1;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  padding: 0.15rem 0;
+}
+
+.arena-column-strip {
+  z-index: 0;
+  border-radius: 0.4rem;
+  align-self: stretch;
+}
+
+.arena-column-strip-alt {
+  background: color-mix(in srgb, var(--panel-2) 45%, transparent);
+}
+
+.arena-column-strip-target {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 45%, transparent);
+}
+
+.arena-cell {
+  position: relative;
+  z-index: 1;
   scroll-snap-align: start;
+}
+
+.arena-cell-wide .card {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--panel-2),
+    var(--panel-2) 10px,
+    color-mix(in srgb, var(--panel-2) 85%, var(--text-dim)) 10px,
+    color-mix(in srgb, var(--panel-2) 85%, var(--text-dim)) 20px
+  );
 }
 
 .lane-empty {
@@ -195,32 +255,12 @@ body {
   font-size: 0.75rem;
 }
 
-.lane-slot-wide {
-  width: 250px;
-  flex-shrink: 0;
-  scroll-snap-align: start;
-}
-
-.lane-slot-wide .card {
-  background-image: repeating-linear-gradient(
-    45deg,
-    var(--panel-2),
-    var(--panel-2) 10px,
-    color-mix(in srgb, var(--panel-2) 85%, var(--text-dim)) 10px,
-    color-mix(in srgb, var(--panel-2) 85%, var(--text-dim)) 20px
-  );
-}
-
 @media (max-width: 480px) {
-  /* Shrink the battlefield cards so ~3 lanes are visible at once on a
-     typical phone width instead of ~1.5 — the rest is a horizontal swipe
-     away via .lane-row's scroll container above, not squashed or hidden. */
-  .lane-slot {
-    width: 96px;
-  }
-
-  .lane-slot-wide {
-    width: 200px;
+  /* Shrink the battlefield cards so more of the arena is visible at once
+     on a typical phone width — the rest is a horizontal swipe away via
+     .arena-scroll's single shared scroll container, not squashed. */
+  .arena-grid {
+    grid-template-columns: 54px repeat(5, 96px);
   }
 
   .card {
@@ -235,22 +275,36 @@ body {
   .lane-empty {
     height: 132px;
   }
+
+  .arena-label {
+    font-size: 0.62rem;
+  }
+}
+
+.bench-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  opacity: 0.9;
 }
 
 .bench-row {
-  margin-top: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-wrap: wrap;
-  border-top: 1px solid var(--border);
-  padding-top: 0.5rem;
 }
 
 .bench-label {
   font-size: 0.75rem;
   color: var(--text-dim);
   margin-right: 0.25rem;
+  white-space: nowrap;
 }
 
 .card {

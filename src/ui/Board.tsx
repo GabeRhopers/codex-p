@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
 import { CARD_DEFINITIONS } from '../content/cards';
 import { otherPlayer, resolveRangePattern } from '../game/board';
@@ -102,6 +102,12 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
     }
   }
 
+  const targetableLanes = selection.mode === 'awaitingRange1Target'
+    ? range1Targets
+    : selection.mode === 'awaitingAbilityTarget'
+      ? abilityTargets
+      : new Set<number>();
+
   return (
     <div className="board">
       <header className="board-header">
@@ -122,27 +128,27 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
         </button>
       </header>
 
-      <PlayerLanes
-        playerID={opponent}
-        label={`${STARTER_NAME(opponent)} (opponent)`}
+      <BenchStrip playerID={opponent} G={G} label={`${STARTER_NAME(opponent)}'s bench`} />
+
+      <Arena
         G={G}
-        targetableLanes={selection.mode === 'awaitingRange1Target' ? range1Targets : selection.mode === 'awaitingAbilityTarget' ? abilityTargets : new Set()}
-        onLaneClick={(lane) => {
+        you={you}
+        opponent={opponent}
+        youLabel={STARTER_NAME(you)}
+        opponentLabel={STARTER_NAME(opponent)}
+        interactiveYourRow={selection.mode === 'idle' || selection.mode === 'selected'}
+        selectedLane={selectedLane}
+        targetableLanes={targetableLanes}
+        onYourLaneClick={(lane) => {
+          if (selection.mode === 'idle' || selection.mode === 'selected') selectLane(lane);
+        }}
+        onOpponentLaneClick={(lane) => {
           if (selection.mode === 'awaitingRange1Target') fireRange1Target(selection.lane, lane);
           else if (selection.mode === 'awaitingAbilityTarget') fireAbility(selection.lane, lane);
         }}
       />
 
-      <PlayerLanes
-        playerID={you}
-        label={`${STARTER_NAME(you)} (you)`}
-        G={G}
-        interactive={selection.mode === 'idle' || selection.mode === 'selected'}
-        selectedLane={selectedLane}
-        onLaneClick={(lane) => {
-          if (selection.mode === 'idle' || selection.mode === 'selected') selectLane(lane);
-        }}
-      />
+      <BenchStrip playerID={you} G={G} label={`${STARTER_NAME(you)}'s bench`} />
 
       {selectedInstance && selectedDef && selection.mode !== 'awaitingRange1Target' && selection.mode !== 'awaitingAbilityTarget' && (
         <ActionPanel
@@ -176,45 +182,159 @@ function STARTER_NAME(playerID: string): string {
   return playerID === '0' ? 'Summer Pressure' : 'Winter Control';
 }
 
-interface PlayerLanesProps {
-  playerID: string;
-  label: string;
+// Grid rows within the arena (see Arena below) — kept as named constants so
+// the row each piece belongs to is legible at every call site instead of
+// bare numbers.
+const OPPONENT_ROW = 1;
+const DIVIDER_ROW = 2;
+const YOUR_ROW = 3;
+
+interface ArenaProps {
   G: GameState;
-  /** True for the current player's own row: occupied, unacted lanes become
-   * clickable to select. False (default) for the opponent's row, where the
-   * only clickable lanes are the ones in `targetableLanes`. */
-  interactive?: boolean;
-  selectedLane?: number | null;
-  targetableLanes?: Set<number>;
-  onLaneClick: (lane: number) => void;
+  you: string;
+  opponent: string;
+  youLabel: string;
+  opponentLabel: string;
+  interactiveYourRow: boolean;
+  selectedLane: number | null;
+  targetableLanes: Set<number>;
+  onYourLaneClick: (lane: number) => void;
+  onOpponentLaneClick: (lane: number) => void;
 }
 
-function PlayerLanes({ playerID, label, G, interactive = false, selectedLane, targetableLanes, onLaneClick }: PlayerLanesProps) {
-  const lanes = G.players[playerID].lanes;
-  const bench = G.players[playerID].bench;
+/**
+ * The central arena: one CSS Grid shared by both players' 5 lanes plus a
+ * lane-number divider between them, so "what's in front of what" is a
+ * pixel-guaranteed property of the layout (same grid columns for both
+ * rows) rather than something two independently-scrolling rows merely
+ * happen to look aligned. The whole grid scrolls as a single unit on
+ * narrow viewports so the two rows can never drift out of column sync.
+ */
+function Arena({
+  G,
+  you,
+  opponent,
+  youLabel,
+  opponentLabel,
+  interactiveYourRow,
+  selectedLane,
+  targetableLanes,
+  onYourLaneClick,
+  onOpponentLaneClick,
+}: ArenaProps) {
+  const opponentLanes = G.players[opponent].lanes;
+  const yourLanes = G.players[you].lanes;
 
-  // A Titan occupies two adjacent lanes with the same instanceId (§5) — it's
-  // rendered as one wide card spanning both slots, not two identical cards,
-  // so the "one unit, two spaces" rule reads clearly.
-  const slots: ReactNode[] = [];
+  const columnStrips: ReactNode[] = [];
+  for (let lane = 0; lane < BOARD_SIZE; lane++) {
+    const isTarget = targetableLanes.has(lane);
+    const classes = [
+      'arena-column-strip',
+      lane % 2 === 1 ? 'arena-column-strip-alt' : '',
+      isTarget ? 'arena-column-strip-target' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    columnStrips.push(
+      <div key={`strip-${lane}`} className={classes} style={{ gridColumn: lane + 2, gridRow: `${OPPONENT_ROW} / span 3` }} />,
+    );
+  }
+
+  const dividerCells: ReactNode[] = [];
+  for (let lane = 0; lane < BOARD_SIZE; lane++) {
+    dividerCells.push(
+      <div key={`div-${lane}`} className="arena-divider-cell" style={{ gridColumn: lane + 2, gridRow: DIVIDER_ROW }}>
+        {lane + 1}
+      </div>,
+    );
+  }
+
+  return (
+    <div className="arena-scroll">
+      <div className="arena-grid">
+        {columnStrips}
+
+        <div className="arena-label arena-label-opponent" style={{ gridColumn: 1, gridRow: OPPONENT_ROW }}>
+          {opponentLabel}
+        </div>
+        <div className="arena-label arena-label-divider" style={{ gridColumn: 1, gridRow: DIVIDER_ROW }}>
+          Lane
+        </div>
+        <div className="arena-label arena-label-you" style={{ gridColumn: 1, gridRow: YOUR_ROW }}>
+          {youLabel}
+        </div>
+
+        {dividerCells}
+
+        {renderRow({
+          G,
+          playerID: opponent,
+          lanes: opponentLanes,
+          gridRow: OPPONENT_ROW,
+          selectedLane: null,
+          targetableLanes,
+          interactive: false,
+          onClick: onOpponentLaneClick,
+        })}
+
+        {renderRow({
+          G,
+          playerID: you,
+          lanes: yourLanes,
+          gridRow: YOUR_ROW,
+          selectedLane,
+          targetableLanes: new Set(),
+          interactive: interactiveYourRow,
+          onClick: onYourLaneClick,
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface RenderRowArgs {
+  G: GameState;
+  playerID: string;
+  lanes: (string | null)[];
+  gridRow: number;
+  selectedLane: number | null;
+  targetableLanes: Set<number>;
+  interactive: boolean;
+  onClick: (lane: number) => void;
+}
+
+/**
+ * Builds the card cells for one side of the arena. A Titan occupies two
+ * adjacent lanes with the same instanceId (§5) — rendered as one wide card
+ * spanning both grid columns (CSS Grid's column-span keeps this pixel
+ * aligned with whatever's in those same two columns on the other row) —
+ * not two identical adjacent cards, and not two independently-tracked
+ * cells that could ever drift apart.
+ */
+function renderRow({ G, playerID, lanes, gridRow, selectedLane, targetableLanes, interactive, onClick }: RenderRowArgs): ReactNode[] {
+  const cells: ReactNode[] = [];
+
   for (let lane = 0; lane < lanes.length; lane++) {
     const instanceId = lanes[lane];
-    const instance = instanceId ? G.cardInstances[instanceId] : null;
-    const def = instance ? CARD_DEFINITIONS[instance.defId] : null;
-    const spansSecondLane = instanceId !== null && lanes[lane + 1] === instanceId;
-
     if (instanceId !== null && lanes[lane - 1] === instanceId) {
-      continue; // already rendered as part of the previous (wide) slot
+      continue; // already rendered as part of the previous (wide) cell
     }
 
+    const spansSecondLane = instanceId !== null && lanes[lane + 1] === instanceId;
+    const span = spansSecondLane ? 2 : 1;
+    const instance = instanceId ? G.cardInstances[instanceId] : null;
+    const def = instance ? CARD_DEFINITIONS[instance.defId] : null;
     const coveredLanes = spansSecondLane ? [lane, lane + 1] : [lane];
-    const targetable = coveredLanes.some((l) => targetableLanes?.has(l));
-    const targetLane = coveredLanes.find((l) => targetableLanes?.has(l)) ?? lane;
+
+    const targetable = coveredLanes.some((l) => targetableLanes.has(l));
+    const targetLane = coveredLanes.find((l) => targetableLanes.has(l)) ?? lane;
     const alreadyActed = !!instance && G.turnState.actedInstanceIds.includes(instance.instanceId);
     const clickable = targetable || (interactive && !!instance && !alreadyActed);
 
-    slots.push(
-      <div className={`lane-slot${spansSecondLane ? ' lane-slot-wide' : ''}`} key={lane}>
+    const style: CSSProperties = { gridColumn: `${lane + 2} / span ${span}`, gridRow };
+
+    cells.push(
+      <div className={`arena-cell${span === 2 ? ' arena-cell-wide' : ''}`} key={`${playerID}-${lane}`} style={style}>
         {instance && def ? (
           <CardView
             definition={def}
@@ -222,7 +342,7 @@ function PlayerLanes({ playerID, label, G, interactive = false, selectedLane, ta
             selected={coveredLanes.includes(selectedLane ?? -1)}
             targetable={targetable}
             clickable={clickable}
-            onClick={() => onLaneClick(targetable ? targetLane : lane)}
+            onClick={() => onClick(targetable ? targetLane : lane)}
           />
         ) : (
           <div className="lane-empty">empty</div>
@@ -231,12 +351,17 @@ function PlayerLanes({ playerID, label, G, interactive = false, selectedLane, ta
     );
   }
 
+  return cells;
+}
+
+function BenchStrip({ playerID, G, label }: { playerID: string; G: GameState; label: string }) {
+  const bench = G.players[playerID].bench;
   return (
-    <section className="player-lanes">
-      <h2>{label}</h2>
-      <div className="lane-row">{slots}</div>
+    <section className="bench-section">
+      <span className="bench-label">
+        {label} ({bench.length}):
+      </span>
       <div className="bench-row">
-        <span className="bench-label">Bench ({bench.length}):</span>
         {bench.map((instanceId) => {
           const instance = G.cardInstances[instanceId];
           const def = CARD_DEFINITIONS[instance.defId];
