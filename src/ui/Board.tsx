@@ -271,6 +271,7 @@ function Arena({
           playerID: opponent,
           lanes: opponentLanes,
           gridRow: OPPONENT_ROW,
+          side: 'opponent',
           selectedLane: null,
           targetableLanes,
           interactive: false,
@@ -282,6 +283,7 @@ function Arena({
           playerID: you,
           lanes: yourLanes,
           gridRow: YOUR_ROW,
+          side: 'you',
           selectedLane,
           targetableLanes: new Set(),
           interactive: interactiveYourRow,
@@ -297,6 +299,13 @@ interface RenderRowArgs {
   playerID: string;
   lanes: (string | null)[];
   gridRow: number;
+  /** Which side of the arena this row is on, from the current active
+   * player's perspective. Stamped onto each cell as data-side so
+   * automated tests (and any future tooling) can find "my own row" or
+   * "the opponent's row" reliably even as bench replacements change which
+   * card occupies a lane, and even as the two rows swap which physical
+   * grid row they render in from turn to turn. */
+  side: 'you' | 'opponent';
   selectedLane: number | null;
   targetableLanes: Set<number>;
   interactive: boolean;
@@ -311,7 +320,7 @@ interface RenderRowArgs {
  * not two identical adjacent cards, and not two independently-tracked
  * cells that could ever drift apart.
  */
-function renderRow({ G, playerID, lanes, gridRow, selectedLane, targetableLanes, interactive, onClick }: RenderRowArgs): ReactNode[] {
+function renderRow({ G, playerID, lanes, gridRow, side, selectedLane, targetableLanes, interactive, onClick }: RenderRowArgs): ReactNode[] {
   const cells: ReactNode[] = [];
 
   for (let lane = 0; lane < lanes.length; lane++) {
@@ -330,11 +339,25 @@ function renderRow({ G, playerID, lanes, gridRow, selectedLane, targetableLanes,
     const targetLane = coveredLanes.find((l) => targetableLanes.has(l)) ?? lane;
     const alreadyActed = !!instance && G.turnState.actedInstanceIds.includes(instance.instanceId);
     const clickable = targetable || (interactive && !!instance && !alreadyActed);
+    // A card is worth visually de-emphasizing when it's already done for
+    // the turn, or when the player is actively choosing a target elsewhere
+    // on the board and this one isn't an eligible choice — not merely
+    // because it isn't part of the *current* interaction at all (e.g. the
+    // opponent's whole board during ordinary card selection, which isn't
+    // "disabled", it's just not what you're looking at right now).
+    const inActiveTargetingMode = targetableLanes.size > 0;
+    const deemphasized = alreadyActed || (inActiveTargetingMode && !targetable);
 
     const style: CSSProperties = { gridColumn: `${lane + 2} / span ${span}`, gridRow };
 
     cells.push(
-      <div className={`arena-cell${span === 2 ? ' arena-cell-wide' : ''}`} key={`${playerID}-${lane}`} style={style}>
+      <div
+        className={`arena-cell${span === 2 ? ' arena-cell-wide' : ''}`}
+        key={`${playerID}-${lane}`}
+        style={style}
+        data-side={side}
+        data-lane={lane}
+      >
         {instance && def ? (
           <CardView
             definition={def}
@@ -342,8 +365,19 @@ function renderRow({ G, playerID, lanes, gridRow, selectedLane, targetableLanes,
             selected={coveredLanes.includes(selectedLane ?? -1)}
             targetable={targetable}
             clickable={clickable}
+            deemphasized={deemphasized}
             onClick={() => onClick(targetable ? targetLane : lane)}
           />
+        ) : targetable ? (
+          // §15 — an in-range but unoccupied lane is a legal (if pointless)
+          // attack target: "only occupied positions receive damage", not
+          // "only occupied positions may be targeted". Without this, a
+          // Range 1 attacker whose sole geometrically valid target happens
+          // to be empty would have no way to complete (or deliberately
+          // waste) that attack through the UI at all.
+          <button type="button" className="lane-empty lane-empty-targetable" onClick={() => onClick(targetLane)}>
+            empty
+          </button>
         ) : (
           <div className="lane-empty">empty</div>
         )}

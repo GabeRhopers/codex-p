@@ -15,6 +15,13 @@ interface CardViewProps {
   selected?: boolean;
   targetable?: boolean;
   clickable?: boolean;
+  /** Visually de-emphasize this card (already acted this turn, or a
+   * non-eligible option while actively choosing a target elsewhere on the
+   * board). Deliberately separate from `clickable`/`disabled`: a card that
+   * simply isn't part of the current UI interaction (e.g. the opponent's
+   * whole board while you're just picking your own attacker) is not
+   * "disabled" in any meaningful sense and shouldn't read as broken. */
+  deemphasized?: boolean;
   onClick?: () => void;
 }
 
@@ -25,6 +32,7 @@ export function CardView({
   selected = false,
   targetable = false,
   clickable = false,
+  deemphasized = false,
   onClick,
 }: CardViewProps) {
   const classes = [
@@ -34,6 +42,7 @@ export function CardView({
     selected ? 'card-selected' : '',
     targetable ? 'card-targetable' : '',
     clickable ? 'card-clickable' : '',
+    deemphasized ? 'card-deemphasized' : '',
     instance.defending ? 'card-defending' : '',
     instance.broken ? 'card-broken' : '',
   ]

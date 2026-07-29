@@ -245,6 +245,7 @@ body {
 }
 
 .lane-empty {
+  width: 100%;
   height: 150px;
   border: 1px dashed var(--border);
   border-radius: 0.5rem;
@@ -253,6 +254,17 @@ body {
   justify-content: center;
   color: var(--text-dim);
   font-size: 0.75rem;
+  background: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+.lane-empty-targetable {
+  cursor: pointer;
+  border-color: var(--danger);
+  border-style: solid;
+  box-shadow: 0 0 8px var(--danger);
+  color: var(--danger);
 }
 
 @media (max-width: 480px) {
@@ -340,8 +352,14 @@ body {
   transform: translateY(-2px);
 }
 
-.card:disabled {
-  opacity: 0.65;
+/* Deliberately not styling :disabled directly — a card that's merely not
+   part of the current UI interaction (e.g. the opponent's whole board
+   while you're just choosing your own attacker) isn't broken and
+   shouldn't look like it. .card-deemphasized (see CardView) covers the
+   cases actually worth signaling: this card already acted this turn, or
+   it's not one of the eligible choices while actively picking a target. */
+.card-deemphasized {
+  opacity: 0.55;
 }
 
 .card-selected {
