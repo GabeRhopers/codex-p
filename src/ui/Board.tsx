@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
 import { CARD_DEFINITIONS } from '../content/cards';
-import { STARTER_DECKS } from '../content/decks';
 import { otherPlayer, resolveRangePattern } from '../game/board';
 import { BOARD_SIZE, MOVES_PER_TURN } from '../game/rules.config';
 import type { GameState } from '../game/types';
@@ -16,12 +15,22 @@ type Selection =
 
 const SIDE_ORDER = ['left', 'center', 'right'] as const;
 
-export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
+/** The two props App.tsx injects on top of boardgame.io's own BoardProps —
+ * which starter deck each playerID chose (App.tsx resolves this at match
+ * setup, since it's the one place that knows the player's choice) and the
+ * callback for the game-over screen's "Play Again". */
+interface SeasonsBattleBoardProps extends BoardProps<GameState> {
+  playerDeckNames: Record<string, string>;
+  onPlayAgain: () => void;
+}
+
+export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain }: SeasonsBattleBoardProps) {
   const [selection, setSelection] = useState<Selection>({ mode: 'idle' });
 
   const you = ctx.currentPlayer;
   const opponent = otherPlayer(you);
   const winner = ctx.gameover?.winner as string | undefined;
+  const starterName = (playerID: string) => playerDeckNames[playerID] ?? playerID;
 
   function resetSelection() {
     setSelection({ mode: 'idle' });
@@ -75,8 +84,10 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
   if (winner) {
     return (
       <div className="board board-gameover">
-        <h1>{STARTER_NAME(winner)} wins!</h1>
-        <p>Reload the page to start a new match.</p>
+        <h1>{starterName(winner)} wins!</h1>
+        <button type="button" className="btn btn-primary" onClick={onPlayAgain}>
+          Play Again
+        </button>
       </div>
     );
   }
@@ -114,14 +125,14 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
       <header className="board-header">
         <div className="score">
           <span className="score-you">
-            {STARTER_NAME(you)}: {G.players[you].eliminationPoints} / 5
+            {starterName(you)}: {G.players[you].eliminationPoints} / 5
           </span>
           <span className="score-opponent">
-            {STARTER_NAME(opponent)}: {G.players[opponent].eliminationPoints} / 5
+            {starterName(opponent)}: {G.players[opponent].eliminationPoints} / 5
           </span>
         </div>
         <div className="turn-info">
-          Turn {ctx.turn} — {STARTER_NAME(you)}'s move ({movesLeft} of {MOVES_PER_TURN} moves left)
+          Turn {ctx.turn} — {starterName(you)}'s move ({movesLeft} of {MOVES_PER_TURN} moves left)
           {ctx.turn === 1 && <span className="hint"> — opening turn: no attacks yet</span>}
         </div>
         <button type="button" className="btn btn-end-turn" onClick={() => events.endTurn?.()}>
@@ -129,15 +140,15 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
         </button>
       </header>
 
-      <BenchStrip playerID={opponent} G={G} label={`${STARTER_NAME(opponent)}'s bench`} />
+      <BenchStrip playerID={opponent} G={G} label={`${starterName(opponent)}'s bench`} />
 
       <h2 className="arena-title">⚔ Arena</h2>
       <Arena
         G={G}
         you={you}
         opponent={opponent}
-        youLabel={STARTER_NAME(you)}
-        opponentLabel={STARTER_NAME(opponent)}
+        youLabel={starterName(you)}
+        opponentLabel={starterName(opponent)}
         interactiveYourRow={selection.mode === 'idle' || selection.mode === 'selected'}
         selectedLane={selectedLane}
         targetableLanes={targetableLanes}
@@ -150,7 +161,7 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
         }}
       />
 
-      <BenchStrip playerID={you} G={G} label={`${STARTER_NAME(you)}'s bench`} />
+      <BenchStrip playerID={you} G={G} label={`${starterName(you)}'s bench`} />
 
       {selectedInstance && selectedDef && selection.mode !== 'awaitingRange1Target' && selection.mode !== 'awaitingAbilityTarget' && (
         <ActionPanel
@@ -178,18 +189,6 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
       )}
     </div>
   );
-}
-
-// Mirrors App.tsx's playerID -> starter deck assignment. Sourcing the name
-// from STARTER_DECKS itself (rather than a second hardcoded literal here)
-// means the two can never drift apart the way a duplicated string could.
-const PLAYER_DECK_NAMES: Record<string, string> = {
-  '0': STARTER_DECKS.vanguardAlliance.name,
-  '1': STARTER_DECKS.wardenAlliance.name,
-};
-
-function STARTER_NAME(playerID: string): string {
-  return PLAYER_DECK_NAMES[playerID] ?? playerID;
 }
 
 // Grid rows within the arena (see Arena below) — kept as named constants so

@@ -670,16 +670,120 @@ body {
   font-weight: 600;
 }
 
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #241a00;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.75rem;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
 .board-gameover {
   align-items: center;
+  justify-content: center;
   text-align: center;
-  padding-top: 4rem;
+  gap: 1.25rem;
+  min-height: calc(100vh - 2rem);
 }
 
 .board-gameover h1 {
   font-family: 'Cinzel', serif;
   font-size: 2rem;
   color: var(--accent);
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Pre-match screens (Home, DeckSelect) — the same centered-panel        */
+/* language as .board-gameover, generalized so any full-screen step in   */
+/* the app's flow (title, deck choice, game over) reads as one system.   */
+/* ------------------------------------------------------------------ */
+
+.screen {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* .app stretches its single child to fill the full 100vh height (flex
+     row's cross-axis default), so centering this flex column's own
+     main-axis is what actually centers it in the viewport — a fixed
+     padding-top would just pin it near the top with the rest of the
+     screen sitting empty below. */
+  justify-content: center;
+  text-align: center;
+  gap: 0.75rem;
+  min-height: calc(100vh - 2rem);
+}
+
+.screen-title {
+  font-family: 'Cinzel', serif;
+  font-size: 2.4rem;
+  color: var(--accent);
+  margin: 0;
+}
+
+.screen-tagline {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.screen-note {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 0 0 0.5rem;
+}
+
+.screen-home .btn-primary {
+  margin-top: 0.5rem;
+}
+
+.deck-choices {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.deck-choice-card {
+  flex: 1 1 220px;
+  max-width: 260px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.deck-choice-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.deck-choice-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.15rem;
+  margin: 0 0 0.5rem;
+  color: var(--text);
+}
+
+.deck-choice-card p {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* ------------------------------------------------------------------ */
