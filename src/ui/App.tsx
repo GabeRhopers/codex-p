@@ -6,6 +6,7 @@ import { createSeasonsBattleGame } from '../game/game';
 import { Board } from './Board';
 import { DeckSelect } from './DeckSelect';
 import { Home } from './Home';
+import { HowToPlay } from './HowToPlay';
 import './fonts.css';
 import './board.css';
 
@@ -23,6 +24,11 @@ export function App() {
   // Client keeps its own internal state, and a match that just ended
   // shouldn't leak into the next one.
   const [matchKey, setMatchKey] = useState(0);
+  // Lives here, not inside Home or Match, because it's opened from both —
+  // rendering it as a sibling overlay (below) means closing it always
+  // returns to whichever screen was already showing, mid-match included,
+  // without touching that screen's own state.
+  const [showGuide, setShowGuide] = useState(false);
 
   function startMatch(player1DeckId: string) {
     const player2DeckId = Object.keys(STARTER_DECKS).find((id) => id !== player1DeckId)!;
@@ -38,16 +44,30 @@ export function App() {
 
   return (
     <div className="app">
-      {screen === 'home' && <Home onStart={() => setScreen('deckSelect')} />}
+      {screen === 'home' && <Home onStart={() => setScreen('deckSelect')} onShowGuide={() => setShowGuide(true)} />}
       {screen === 'deckSelect' && <DeckSelect onChoose={startMatch} />}
       {screen === 'match' && playerDeckIds && (
-        <Match key={matchKey} playerDeckIds={playerDeckIds} onPlayAgain={playAgain} />
+        <Match
+          key={matchKey}
+          playerDeckIds={playerDeckIds}
+          onPlayAgain={playAgain}
+          onShowGuide={() => setShowGuide(true)}
+        />
       )}
+      {showGuide && <HowToPlay onClose={() => setShowGuide(false)} />}
     </div>
   );
 }
 
-function Match({ playerDeckIds, onPlayAgain }: { playerDeckIds: PlayerDeckIds; onPlayAgain: () => void }) {
+function Match({
+  playerDeckIds,
+  onPlayAgain,
+  onShowGuide,
+}: {
+  playerDeckIds: PlayerDeckIds;
+  onPlayAgain: () => void;
+  onShowGuide: () => void;
+}) {
   // Client() returns a component *type*, not an element — constructing it
   // fresh on every render (rather than once per mount) would hand React a
   // different type at the same JSX position on the next unrelated
@@ -67,5 +87,5 @@ function Match({ playerDeckIds, onPlayAgain }: { playerDeckIds: PlayerDeckIds; o
     '1': STARTER_DECKS[playerDeckIds['1']].name,
   };
 
-  return <GameClient playerDeckNames={playerDeckNames} onPlayAgain={onPlayAgain} />;
+  return <GameClient playerDeckNames={playerDeckNames} onPlayAgain={onPlayAgain} onShowGuide={onShowGuide} />;
 }

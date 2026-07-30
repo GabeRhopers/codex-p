@@ -22,9 +22,10 @@ const SIDE_ORDER = ['left', 'center', 'right'] as const;
 interface SeasonsBattleBoardProps extends BoardProps<GameState> {
   playerDeckNames: Record<string, string>;
   onPlayAgain: () => void;
+  onShowGuide: () => void;
 }
 
-export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain }: SeasonsBattleBoardProps) {
+export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onShowGuide }: SeasonsBattleBoardProps) {
   const [selection, setSelection] = useState<Selection>({ mode: 'idle' });
 
   const you = ctx.currentPlayer;
@@ -135,6 +136,9 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain }: S
           Turn {ctx.turn} — {starterName(you)}'s move ({movesLeft} of {MOVES_PER_TURN} moves left)
           {ctx.turn === 1 && <span className="hint"> — opening turn: no attacks yet</span>}
         </div>
+        <button type="button" className="btn btn-guide" onClick={onShowGuide}>
+          How to Play
+        </button>
         <button type="button" className="btn btn-end-turn" onClick={() => events.endTurn?.()}>
           End Turn
         </button>

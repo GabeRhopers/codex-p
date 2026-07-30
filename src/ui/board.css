@@ -786,6 +786,240 @@ body {
   line-height: 1.4;
 }
 
+.screen-home-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn-guide {
+  color: var(--text-dim);
+}
+
+/* ------------------------------------------------------------------ */
+/* How to Play — an overlay, not a screen, so it can open from Home OR  */
+/* mid-match without costing the player their place (see HowToPlay.tsx).*/
+/* ------------------------------------------------------------------ */
+
+.guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(10, 11, 16, 0.6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.guide-panel {
+  width: 100%;
+  max-width: 640px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.guide-panel-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0.85rem 0.85rem 0 0;
+  padding: 0.9rem 1.1rem;
+}
+
+.guide-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  color: var(--accent);
+  margin: 0;
+}
+
+.guide-close {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  line-height: 1;
+}
+
+.guide-body {
+  padding: 1.25rem 1.4rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.guide-section h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.guide-section p {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0 0 0.6rem;
+}
+
+.guide-section p:last-child {
+  margin-bottom: 0;
+}
+
+.guide-section strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.guide-section p.guide-lede {
+  color: var(--text);
+}
+
+.guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-list li {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.guide-item-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.guide-item-name em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+.guide-item-desc {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.guide-range-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+@media (max-width: 480px) {
+  .guide-range-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.guide-range-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.guide-range-label {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.guide-range-card p {
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.guide-alliances {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .guide-alliances {
+    grid-template-columns: 1fr;
+  }
+}
+
+.guide-alliance-card {
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--panel);
+  border-left-width: 4px;
+}
+
+.guide-alliance-vanguard {
+  border-left-color: var(--summer);
+}
+
+.guide-alliance-warden {
+  border-left-color: var(--winter);
+}
+
+.guide-alliance-card h4 {
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  color: var(--text);
+}
+
+.guide-alliance-card p {
+  font-size: 0.82rem;
+  margin: 0;
+}
+
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.guide-table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.guide-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.guide-table tr:last-child td {
+  border-bottom: none;
+}
+
 /* ------------------------------------------------------------------ */
 /* Mobile overrides — deliberately last in the file.                  */
 /*                                                                     */
