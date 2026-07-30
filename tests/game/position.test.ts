@@ -92,3 +92,48 @@ describe('§19 Change position — Titans move as one unit', () => {
     expect(getG(client).cardInstances['1:normal-r2'].defending).toBe(true);
   });
 });
+
+describe('§19 Change position — a Normal card pushing an adjacent Titan (Ruling 5)', () => {
+  it('pushes the Titan one further lane when its far side is empty', () => {
+    client = startClient({
+      '0': makeSetup(deck, ['normal-r1']),
+      '1': makeSetup(deck, ['normal-r2', 'titan']), // normal-r2 lane 0, titan lanes 1-2, lanes 3-4 empty
+    });
+    advanceToPlayerTurn(client, '1');
+
+    client.moves.changePosition({ lane: 0, direction: 'right' }); // pushes into the titan's near lane (1)
+    const G = getG(client);
+    expect(G.players['1'].lanes).toEqual([null, '1:normal-r2', '1:titan', '1:titan', null]);
+    expect(G.turnState.movesUsed).toBe(1);
+  });
+
+  it('is rejected when the Titan has nowhere to go (the reported scenario: pinned against another card)', () => {
+    // This is the exact shape of the reported bug: Normal - Titan - Normal,
+    // with the far side of the Titan occupied. Even with push-through
+    // implemented, this specific arrangement has no legal resolution — the
+    // Titan can't be split, and its only escape lane is taken.
+    client = startClient({
+      '0': makeSetup(deck, ['normal-r1']),
+      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2']), // normal-r1 lane 0, titan lanes 1-2, normal-r2 lane 3
+    });
+    advanceToPlayerTurn(client, '1');
+
+    client.moves.changePosition({ lane: 3, direction: 'left' }); // would need the titan to vacate into lane 0, occupied
+    const G = getG(client);
+    expect(G.players['1'].lanes).toEqual(['1:normal-r1', '1:titan', '1:titan', '1:normal-r2', null]);
+    expect(G.turnState.movesUsed).toBe(0);
+  });
+
+  it('is rejected when pushing the Titan would run it off the edge of the board', () => {
+    client = startClient({
+      '0': makeSetup(deck, ['normal-r1']),
+      '1': makeSetup(deck, ['normal-r1', 'normal-r2', 'normal-r3', 'titan']), // titan pinned at the true right edge, lanes 3-4
+    });
+    advanceToPlayerTurn(client, '1');
+
+    client.moves.changePosition({ lane: 2, direction: 'right' }); // titan would need lane 5 — doesn't exist
+    const G = getG(client);
+    expect(G.players['1'].lanes).toEqual(['1:normal-r1', '1:normal-r2', '1:normal-r3', '1:titan', '1:titan']);
+    expect(G.turnState.movesUsed).toBe(0);
+  });
+});

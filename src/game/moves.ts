@@ -179,10 +179,30 @@ export function changePositionMove(
     if (!isValidLane(targetLane)) return INVALID_MOVE;
     const targetInstance = instanceAtLane(G, playerID, targetLane);
     if (!targetInstance) return INVALID_MOVE; // must swap with an occupied lane
-    if (registry[targetInstance.defId].form !== 'Normal') return INVALID_MOVE;
 
-    G.players[playerID].lanes[payload.lane] = targetInstance.instanceId;
-    G.players[playerID].lanes[targetLane] = instance.instanceId;
+    if (registry[targetInstance.defId].form === 'Normal') {
+      G.players[playerID].lanes[payload.lane] = targetInstance.instanceId;
+      G.players[playerID].lanes[targetLane] = instance.instanceId;
+    } else {
+      // Ruling 5, the other direction: a Normal card can push a Titan out
+      // of its way too, but a Titan can never be split — the push only
+      // works if the Titan's *whole* two-lane block has room to slide one
+      // further lane in the same direction. No further chain reaction
+      // beyond that single step (whatever's past the Titan's new far lane,
+      // if anything, is irrelevant — it must specifically be empty).
+      if (!titanMoveDisplacesOccupant) return INVALID_MOVE;
+      const titanOccupied = lanesOccupiedBy(G, playerID, targetInstance.instanceId);
+      const newTitanLanes = titanOccupied.map((lane) => lane + delta);
+      if (!newTitanLanes.every(isValidLane)) return INVALID_MOVE;
+      const titanFarLane = newTitanLanes.find((lane) => !titanOccupied.includes(lane))!;
+      if (G.players[playerID].lanes[titanFarLane] !== null) return INVALID_MOVE;
+
+      for (const lane of newTitanLanes) {
+        G.players[playerID].lanes[lane] = targetInstance.instanceId;
+      }
+      G.players[playerID].lanes[targetLane] = instance.instanceId;
+      G.players[playerID].lanes[payload.lane] = null;
+    }
   } else {
     const occupied = lanesOccupiedBy(G, playerID, instance.instanceId);
     const newLanes = occupied.map((lane) => lane + delta);

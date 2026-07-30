@@ -150,15 +150,25 @@ needs an explicit exception (none do in the MVP roster).
 
 **Question:** §19 grants a Normal card a swap with one adjacent friendly
 Normal card when it changes position, but says nothing about what happens
-when a Titan slides and the one genuinely new lane isn't empty.
+when a move would put a Titan and a Normal card in each other's way — in
+either direction.
 
-**Default:** `true` — the occupant of the Titan's newly-entered lane is
-shoved into the lane the Titan just vacated, extending the same swap
-concept §19 already gives Normal cards across the Titan's two-lane
-footprint. The alternative reading (`false`: the destination must be
-strictly empty) was the MVP's original, untested assumption, and it makes
-Titan movement effectively dead for most of a match — a standard 5-lane
-starting board has no empty lanes at all, and a destroyed card is normally
-replaced from the bench immediately (§22) rather than leaving its lane
-empty, so a strictly-empty-only Titan can only ever move after its
-controller's bench is fully exhausted.
+**Default:** `true` — displacement, both directions:
+
+- A Titan's own move shoves the occupant of its newly-entered lane into
+  the lane it just vacated, extending the same swap concept §19 already
+  gives Normal cards across the Titan's two-lane footprint. The
+  alternative reading (`false`: the destination must be strictly empty)
+  was the MVP's original, untested assumption, and it makes Titan
+  movement effectively dead for most of a match — a standard 5-lane
+  starting board has no empty lanes at all, and a destroyed card is
+  normally replaced from the bench immediately (§22) rather than leaving
+  its lane empty, so a strictly-empty-only Titan can only ever move after
+  its controller's bench is fully exhausted.
+- Symmetrically, a Normal card's move can push an adjacent Titan one
+  further lane in the same direction — but only if the Titan's *whole*
+  two-lane block actually has room to land there, since a Titan can never
+  be split across non-adjacent lanes. If that far lane isn't empty, the
+  move is simply illegal (not "push harder" / chain further) — a Normal
+  card pinned between a Titan and the board edge, with the Titan itself
+  pinned against something on its far side, genuinely has nowhere to go.

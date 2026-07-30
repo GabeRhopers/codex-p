@@ -30,15 +30,21 @@ export const shieldFloor = 0;
 /**
  * Ruling 5: §19 defines a swap for a moving Normal card ("may swap with
  * one adjacent friendly Normal card") but is silent on what happens when a
- * Titan slides into a lane pair and the one genuinely new lane isn't
- * empty. A strict "must be empty" reading would make Titan movement
- * legal almost never — a standard starting board fills all 5 lanes, so an
- * empty lane only appears once a destroyed card's owner has run out of
- * bench replacements.
+ * move would put a Titan and a Normal card in each other's way. A strict
+ * "must be empty" reading would make Titan movement legal almost never —
+ * a standard starting board fills all 5 lanes, so an empty lane only
+ * appears once a destroyed card's owner has run out of bench replacements.
  *
- * `true` (default): the occupant of the newly-entered lane is shoved into
- * the lane the Titan just vacated — the same swap concept §19 already
- * grants Normal cards, just extended across the Titan's two-lane
- * footprint instead of requiring the destination to be empty.
+ * `true` (default): displacement, both directions —
+ *   - A Titan's own move shoves the occupant of its newly-entered lane
+ *     into the lane it just vacated, extending §19's swap concept across
+ *     its two-lane footprint instead of requiring the destination empty.
+ *   - A Normal card's move can push an adjacent Titan one further lane in
+ *     the same direction, but only if the Titan's *whole* two-lane block
+ *     actually has room to land there — a Titan can never be split, so
+ *     this fails (not "chains further") the moment that far lane isn't
+ *     empty. A Normal card pinned against a Titan that's itself pinned
+ *     against the board edge (or another card) genuinely has nowhere to
+ *     go, same as it would with a Normal-card neighbor in that spot.
  */
 export const titanMoveDisplacesOccupant = true;
