@@ -412,6 +412,31 @@ function renderRow({ G, playerID, lanes, gridRow, side, selectedLane, targetable
   return cells;
 }
 
+/**
+ * Mirrors the legality check in game/moves.ts's changePositionMove without
+ * importing it (that version mutates G and returns INVALID_MOVE; this one
+ * is a pure read-only predicate for deciding whether to show the button at
+ * all). A Titan's shove (Ruling 5) always succeeds in-bounds; a Normal
+ * card's swap only succeeds if the adjacent lane holds a friendly Normal
+ * card — never empty, never a Titan.
+ */
+function canSlide(G: GameState, owner: string, lane: number, footprint: number, direction: 'left' | 'right'): boolean {
+  if (direction === 'left') {
+    if (lane <= 0) return false;
+    if (footprint === 2) return true;
+    return isFriendlyNormalAt(G, owner, lane - 1);
+  }
+  if (lane >= BOARD_SIZE - footprint) return false;
+  if (footprint === 2) return true;
+  return isFriendlyNormalAt(G, owner, lane + 1);
+}
+
+function isFriendlyNormalAt(G: GameState, owner: string, lane: number): boolean {
+  const instanceId = G.players[owner].lanes[lane];
+  if (!instanceId) return false;
+  return CARD_DEFINITIONS[G.cardInstances[instanceId].defId].form === 'Normal';
+}
+
 function BenchStrip({ playerID, G, label }: { playerID: string; G: GameState; label: string }) {
   const bench = G.players[playerID].bench;
   return (
@@ -456,6 +481,16 @@ function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefe
   // itself — the right-move bound has to account for that or it'll offer
   // "Move Right" one lane past where a 2-wide Titan can actually go.
   const footprint = definition.form === 'Titan' ? 2 : 1;
+  // §19: a Normal card may only swap with an adjacent friendly *Normal*
+  // card — it has no way to displace a Titan (only a Titan's own move can
+  // shove a Normal card aside, per Ruling 5; there's no reverse). Board
+  // edges alone aren't enough to decide whether the button should show:
+  // a Normal card sitting next to a Titan, or next to an empty lane, is
+  // just as blocked as one at the literal edge of the board, and offering
+  // the button in those cases only to have the engine silently reject it
+  // is the same bug the Titan edge case was.
+  const canMoveLeft = canMove && canSlide(G, instance.owner, lane, footprint, 'left');
+  const canMoveRight = canMove && canSlide(G, instance.owner, lane, footprint, 'right');
 
   return (
     <div className="action-panel">
@@ -493,12 +528,12 @@ function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefe
           </button>
         )}
 
-        {canMove && lane > 0 && (
+        {canMoveLeft && (
           <button type="button" className="btn" onClick={() => onMove('left')}>
             Move Left
           </button>
         )}
-        {canMove && lane < BOARD_SIZE - footprint && (
+        {canMoveRight && (
           <button type="button" className="btn" onClick={() => onMove('right')}>
             Move Right
           </button>
