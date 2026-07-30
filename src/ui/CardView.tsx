@@ -1,3 +1,4 @@
+import { CARD_PORTRAITS } from '../content/portraits';
 import type { CardDefinition, CardInstance } from '../game/types';
 
 const SEASON_CLASS: Record<CardDefinition['season'], string> = {
@@ -65,8 +66,11 @@ export function CardView({
         </span>
         <span className="card-range">R{definition.range}</span>
       </div>
+      {size === 'battlefield' && <CardPortrait definition={definition} />}
       <div className="card-name">{definition.name}</div>
-      <div className="card-form">{definition.form === 'Titan' ? 'Titan' : definition.season}</div>
+      {size === 'bench' && (
+        <div className="card-form">{definition.form === 'Titan' ? 'Titan' : definition.season}</div>
+      )}
       <div className="card-stats">
         <span className="stat stat-attack" aria-label="Attack">
           ⚔ {instance.currentAttack}
@@ -79,5 +83,23 @@ export function CardView({
       {instance.defending && <div className="card-flag card-flag-defending">Defending</div>}
       {instance.broken && <div className="card-flag card-flag-broken">Broken</div>}
     </button>
+  );
+}
+
+/**
+ * The art window in the middle of a battlefield card. Falls back to a
+ * plain dashed placeholder (matching the empty-lane convention already
+ * used elsewhere on the board) for any card that doesn't have a portrait
+ * yet — deliberately not blocking on 100% roster coverage.
+ */
+function CardPortrait({ definition }: { definition: CardDefinition }) {
+  const file = CARD_PORTRAITS[definition.id];
+  if (!file) {
+    return <div className="card-portrait card-portrait-placeholder" aria-hidden="true" />;
+  }
+  return (
+    <div className="card-portrait">
+      <img src={`${import.meta.env.BASE_URL}portraits/${file}`} alt="" loading="lazy" />
+    </div>
   );
 }

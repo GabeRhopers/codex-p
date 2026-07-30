@@ -324,7 +324,7 @@ body {
 
 .lane-empty {
   width: 100%;
-  height: 150px;
+  height: 190px;
   border: 1px dashed var(--border);
   border-radius: 0.5rem;
   display: flex;
@@ -379,9 +379,13 @@ body {
   }
 
   .card {
-    height: 128px;
+    height: 148px;
     padding: 0.3rem;
     gap: 0.12rem;
+  }
+
+  .card-portrait {
+    height: 52px;
   }
 
   .card-name {
@@ -406,7 +410,7 @@ body {
   }
 
   .lane-empty {
-    height: 128px;
+    height: 148px;
     font-size: 0.65rem;
   }
 }
@@ -439,7 +443,10 @@ body {
 
 .card {
   width: 100%;
-  height: 150px;
+  /* Tall enough for the portrait art window plus the existing text stack
+     (tier/range, name, stats, ability) below it without cramping either —
+     see .card-portrait. */
+  height: 190px;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -528,6 +535,39 @@ body {
 
 .card-tier[data-tier='Gold'] {
   color: var(--accent);
+}
+
+/* The art window in the middle of a battlefield card (bench cards skip it
+   entirely — too small to read a face at 76px wide). Source art has an
+   opaque white background baked in rather than transparency, so the frame
+   itself is white too: no seam between the frame and the image edges,
+   same as a photo in a light mat. object-fit: contain guarantees nothing
+   in the art (a horn, an ear) is ever cropped off, at the cost of a
+   little unused margin on off-square images — a better trade than losing
+   part of a hand-picked illustration. */
+.card-portrait {
+  flex-shrink: 0;
+  height: 70px;
+  border-radius: 0.35rem;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Cards without art yet: the same dashed-border convention .lane-empty
+   already uses for "nothing here" — reads as a placeholder, not a bug. */
+.card-portrait-placeholder {
+  background: var(--panel);
+  border-style: dashed;
 }
 
 .card-name {
