@@ -165,10 +165,16 @@ either direction.
   normally replaced from the bench immediately (§22) rather than leaving
   its lane empty, so a strictly-empty-only Titan can only ever move after
   its controller's bench is fully exhausted.
-- Symmetrically, a Normal card's move can push an adjacent Titan one
-  further lane in the same direction — but only if the Titan's *whole*
-  two-lane block actually has room to land there, since a Titan can never
-  be split across non-adjacent lanes. If that far lane isn't empty, the
-  move is simply illegal (not "push harder" / chain further) — a Normal
-  card pinned between a Titan and the board edge, with the Titan itself
-  pinned against something on its far side, genuinely has nowhere to go.
+- Symmetrically, a Normal card's move can push an adjacent Titan too — but
+  a Titan can never be split across non-adjacent lanes, so this isn't a
+  simple 1-for-1 swap the way two Normal cards trade places. It walks past
+  the Titan, and past anything *further* blocking it, looking for an
+  actual empty lane to absorb the whole line. If one exists before the
+  edge of the board, every unit in the line — the Titan and every card
+  between it and the gap — shifts over together in one move. If the line
+  runs into the edge of the board first, the entire move fails and nothing
+  shifts: a Normal card pinned against a Titan that's itself pinned
+  against something on its own far side genuinely has nowhere to go.
+  Implemented as `planPushChain` in `src/game/moves.ts`, reused directly
+  by the UI (`Board.tsx`'s `canSlide`) so button visibility and actual
+  move legality can never drift apart.

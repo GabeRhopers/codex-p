@@ -39,12 +39,15 @@ export const shieldFloor = 0;
  *   - A Titan's own move shoves the occupant of its newly-entered lane
  *     into the lane it just vacated, extending §19's swap concept across
  *     its two-lane footprint instead of requiring the destination empty.
- *   - A Normal card's move can push an adjacent Titan one further lane in
- *     the same direction, but only if the Titan's *whole* two-lane block
- *     actually has room to land there — a Titan can never be split, so
- *     this fails (not "chains further") the moment that far lane isn't
- *     empty. A Normal card pinned against a Titan that's itself pinned
- *     against the board edge (or another card) genuinely has nowhere to
- *     go, same as it would with a Normal-card neighbor in that spot.
+ *     Always succeeds in-bounds — this is a closed 1-for-1 trade (the
+ *     Titan vacates exactly 1 lane, the occupant needs exactly 1 lane), so
+ *     it never depends on anything further down the board.
+ *   - A Normal card's move can push an adjacent Titan too, but a Titan
+ *     can't be split, so this isn't a simple swap — it walks past the
+ *     Titan (and past anything *further* blocking it) looking for an
+ *     actual empty lane to absorb the whole line. If one exists before the
+ *     edge of the board, every unit in the line shifts over together. If
+ *     the line runs into the board edge first, the whole move fails —
+ *     nothing shifts partway. See `planPushChain` in game/moves.ts.
  */
 export const titanMoveDisplacesOccupant = true;

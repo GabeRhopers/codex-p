@@ -136,4 +136,61 @@ describe('§19 Change position — a Normal card pushing an adjacent Titan (Ruli
     expect(G.players['1'].lanes).toEqual(['1:normal-r1', '1:normal-r2', '1:normal-r3', '1:titan', '1:titan']);
     expect(G.turnState.movesUsed).toBe(0);
   });
+
+  it('cascades through the Titan AND a further Normal card when there is room past both', () => {
+    // normal-r1(0) - titan(1,2) - normal-r2(3) - empty(4). Pushing normal-r1
+    // right has to walk past the Titan, find normal-r2 still in the way,
+    // and keep going to lane 4 before it finds real room. Every unit in the
+    // line should end up shifted by exactly one lane.
+    client = startClient({
+      '0': makeSetup(deck, ['fragile']),
+      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2']),
+    });
+    advanceToPlayerTurn(client, '1');
+
+    client.moves.changePosition({ lane: 0, direction: 'right' });
+    const G = getG(client);
+    expect(G.players['1'].lanes).toEqual([
+      null,
+      '1:normal-r1',
+      '1:titan',
+      '1:titan',
+      '1:normal-r2',
+    ]);
+    expect(G.turnState.movesUsed).toBe(1);
+  });
+
+  it('rejects the cascade when the Titan and a further Normal card leave no room anywhere', () => {
+    // normal-r1(0) - titan(1,2) - normal-r2(3) - normal-r3(4): completely
+    // full board in that direction, no empty lane to absorb the push at any
+    // depth. Nothing should move.
+    client = startClient({
+      '0': makeSetup(deck, ['fragile']),
+      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2', 'normal-r3']),
+    });
+    advanceToPlayerTurn(client, '1');
+
+    client.moves.changePosition({ lane: 0, direction: 'right' });
+    const G = getG(client);
+    expect(G.players['1'].lanes).toEqual([
+      '1:normal-r1',
+      '1:titan',
+      '1:titan',
+      '1:normal-r2',
+      '1:normal-r3',
+    ]);
+    expect(G.turnState.movesUsed).toBe(0);
+  });
+
+  it('cascading units other than the mover remain free to act this turn', () => {
+    client = startClient({
+      '0': makeSetup(deck, ['fragile']),
+      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2']),
+    });
+    advanceToPlayerTurn(client, '1');
+
+    client.moves.changePosition({ lane: 0, direction: 'right' }); // titan -> [2,3], normal-r2 -> [4]
+    client.moves.enterDefense({ lane: 4 }); // normal-r2, shifted but never the initiator, still free to act
+    expect(getG(client).cardInstances['1:normal-r2'].defending).toBe(true);
+  });
 });

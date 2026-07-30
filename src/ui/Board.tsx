@@ -3,9 +3,9 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
 import { CARD_DEFINITIONS } from '../content/cards';
 import { STARTER_DECKS } from '../content/decks';
-import { isValidLane, otherPlayer, resolveRangePattern } from '../game/board';
+import { otherPlayer, resolveRangePattern } from '../game/board';
+import { planPushChain } from '../game/moves';
 import { BOARD_SIZE, MOVES_PER_TURN } from '../game/rules.config';
-import { lanesOccupiedBy } from '../game/state';
 import type { GameState } from '../game/types';
 import { CardView } from './CardView';
 
@@ -414,14 +414,14 @@ function renderRow({ G, playerID, lanes, gridRow, side, selectedLane, targetable
 }
 
 /**
- * Mirrors the legality check in game/moves.ts's changePositionMove without
- * importing it (that version mutates G and returns INVALID_MOVE; this one
- * is a pure read-only predicate for deciding whether to show the button at
- * all). A Titan's own shove (Ruling 5) always succeeds in-bounds. A Normal
- * card's move succeeds against an adjacent friendly Normal card (direct
- * swap) or an adjacent friendly Titan that has room to shift one further
- * lane the same direction (push-through) — never against empty space, and
- * never against a Titan with nowhere to go.
+ * Whether to show a Move button at all — a pure read-only predicate, since
+ * the real move (game/moves.ts's changePositionMove) mutates G and returns
+ * INVALID_MOVE instead of a boolean. For the one case that isn't locally
+ * decidable (a Normal card pushing into an adjacent Titan, which may need
+ * to cascade past further cards looking for room), this calls the exact
+ * same planPushChain the engine itself uses rather than re-deriving that
+ * logic here — the duplicated Titan-edge-case bug earlier this project is
+ * exactly the failure mode a second copy of this logic would risk again.
  */
 function canSlide(G: GameState, owner: string, lane: number, footprint: number, direction: 'left' | 'right'): boolean {
   const delta = direction === 'left' ? -1 : 1;
@@ -430,19 +430,15 @@ function canSlide(G: GameState, owner: string, lane: number, footprint: number, 
   } else if (lane >= BOARD_SIZE - footprint) {
     return false;
   }
-  if (footprint === 2) return true;
+  if (footprint === 2) return true; // Titan's own shove always succeeds in-bounds
 
   const targetLane = lane + delta;
   const targetId = G.players[owner].lanes[targetLane];
   if (!targetId) return false;
   const targetDef = CARD_DEFINITIONS[G.cardInstances[targetId].defId];
-  if (targetDef.form === 'Normal') return true;
+  if (targetDef.form === 'Normal') return true; // direct swap, always legal
 
-  const titanLanes = lanesOccupiedBy(G, owner, targetId);
-  const newTitanLanes = titanLanes.map((l) => l + delta);
-  if (!newTitanLanes.every(isValidLane)) return false;
-  const titanFarLane = newTitanLanes.find((l) => !titanLanes.includes(l))!;
-  return G.players[owner].lanes[titanFarLane] === null;
+  return planPushChain(G, CARD_DEFINITIONS, owner, lane, targetId, delta) !== null;
 }
 
 function BenchStrip({ playerID, G, label }: { playerID: string; G: GameState; label: string }) {

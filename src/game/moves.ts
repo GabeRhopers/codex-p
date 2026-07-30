@@ -161,6 +161,74 @@ export interface ChangePositionPayload {
   direction: 'left' | 'right';
 }
 
+interface ChainUnit {
+  instanceId: string;
+  lanes: number[];
+}
+
+/**
+ * A Titan can never be split across non-adjacent lanes, so a Normal card
+ * pushing into one can't resolve as a simple 1-for-1 swap the way two
+ * Normal cards can (§19's literal "swap with one adjacent Normal card").
+ * Instead it has to walk outward past the Titan — and past anything
+ * *further* out that's also in the way — looking for an actual empty lane
+ * to absorb the whole line. If it finds one before running off the edge of
+ * the board, every unit in the chain (the mover included) shifts over by
+ * one lane together, preserving each unit's own shape (a Titan's two lanes
+ * always move as a pair). If it hits the edge first, nothing moves — a
+ * Titan can't be shoved into space that doesn't exist.
+ *
+ * Bounded by construction: at most one Titan exists per side (§9.3), so
+ * this only ever walks a short, finite line of real cards on a 5-lane
+ * board, never an unbounded search.
+ */
+export function planPushChain(
+  G: GameState,
+  registry: CardDefinitionRegistry,
+  playerID: string,
+  moverLane: number,
+  firstBlockerInstanceId: string,
+  delta: number,
+): ChainUnit[] | null {
+  const lanes = G.players[playerID].lanes;
+  const chain: ChainUnit[] = [];
+
+  let blockerId: string | null = firstBlockerInstanceId;
+  let scanFrom: number = moverLane;
+  while (blockerId !== null) {
+    const currentId: string = blockerId;
+    const blockerDef = registry[findInstance(G, currentId).defId];
+    const blockerLanes: number[] =
+      blockerDef.form === 'Titan' ? lanesOccupiedBy(G, playerID, currentId) : [scanFrom + delta];
+    chain.push({ instanceId: currentId, lanes: blockerLanes });
+
+    const farEdge: number = delta > 0 ? Math.max(...blockerLanes) : Math.min(...blockerLanes);
+    const nextLane: number = farEdge + delta;
+    if (!isValidLane(nextLane)) return null; // ran off the board — no room anywhere down the line
+    scanFrom = farEdge;
+    blockerId = lanes[nextLane];
+  }
+
+  return chain;
+}
+
+function applyPushChain(
+  G: GameState,
+  playerID: string,
+  moverInstanceId: string,
+  moverLane: number,
+  chain: ChainUnit[],
+  delta: number,
+): void {
+  const allUnits: ChainUnit[] = [{ instanceId: moverInstanceId, lanes: [moverLane] }, ...chain];
+  for (const unit of allUnits) {
+    for (const lane of unit.lanes) G.players[playerID].lanes[lane] = null;
+  }
+  for (const unit of allUnits) {
+    for (const lane of unit.lanes) G.players[playerID].lanes[lane + delta] = unit.instanceId;
+  }
+}
+
 export function changePositionMove(
   mctx: MoveCtx,
   payload: ChangePositionPayload,
@@ -181,27 +249,18 @@ export function changePositionMove(
     if (!targetInstance) return INVALID_MOVE; // must swap with an occupied lane
 
     if (registry[targetInstance.defId].form === 'Normal') {
+      // §19's literal "swap with one adjacent Normal card" — always a
+      // clean 1-for-1 trade, no cascade needed or intended.
       G.players[playerID].lanes[payload.lane] = targetInstance.instanceId;
       G.players[playerID].lanes[targetLane] = instance.instanceId;
     } else {
       // Ruling 5, the other direction: a Normal card can push a Titan out
-      // of its way too, but a Titan can never be split — the push only
-      // works if the Titan's *whole* two-lane block has room to slide one
-      // further lane in the same direction. No further chain reaction
-      // beyond that single step (whatever's past the Titan's new far lane,
-      // if anything, is irrelevant — it must specifically be empty).
+      // of its way too. A Titan can't be split, so this walks the whole
+      // line past it looking for real room to absorb the push.
       if (!titanMoveDisplacesOccupant) return INVALID_MOVE;
-      const titanOccupied = lanesOccupiedBy(G, playerID, targetInstance.instanceId);
-      const newTitanLanes = titanOccupied.map((lane) => lane + delta);
-      if (!newTitanLanes.every(isValidLane)) return INVALID_MOVE;
-      const titanFarLane = newTitanLanes.find((lane) => !titanOccupied.includes(lane))!;
-      if (G.players[playerID].lanes[titanFarLane] !== null) return INVALID_MOVE;
-
-      for (const lane of newTitanLanes) {
-        G.players[playerID].lanes[lane] = targetInstance.instanceId;
-      }
-      G.players[playerID].lanes[targetLane] = instance.instanceId;
-      G.players[playerID].lanes[payload.lane] = null;
+      const chain = planPushChain(G, registry, playerID, payload.lane, targetInstance.instanceId, delta);
+      if (!chain) return INVALID_MOVE;
+      applyPushChain(G, playerID, instance.instanceId, payload.lane, chain, delta);
     }
   } else {
     const occupied = lanesOccupiedBy(G, playerID, instance.instanceId);
