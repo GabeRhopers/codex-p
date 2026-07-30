@@ -130,6 +130,7 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
 
       <BenchStrip playerID={opponent} G={G} label={`${STARTER_NAME(opponent)}'s bench`} />
 
+      <h2 className="arena-title">⚔ Arena</h2>
       <Arena
         G={G}
         you={you}
@@ -250,46 +251,60 @@ function Arena({
   }
 
   return (
-    <div className="arena-scroll">
-      <div className="arena-grid">
-        {columnStrips}
+    <div className="arena-wrap">
+      <div className="arena-scroll">
+        <div className="arena-grid">
+          {columnStrips}
 
-        <div className="arena-label arena-label-opponent" style={{ gridColumn: 1, gridRow: OPPONENT_ROW }}>
-          {opponentLabel}
+          <div
+            className="arena-label arena-label-opponent"
+            style={{ gridColumn: 1, gridRow: OPPONENT_ROW }}
+            title={opponentLabel}
+          >
+            <span className="label-full">{opponentLabel}</span>
+            <span className="label-short">OPP</span>
+          </div>
+          <div className="arena-label arena-label-divider" style={{ gridColumn: 1, gridRow: DIVIDER_ROW }}>
+            <span className="label-full">Lane</span>
+            <span className="label-short">#</span>
+          </div>
+          <div
+            className="arena-label arena-label-you"
+            style={{ gridColumn: 1, gridRow: YOUR_ROW }}
+            title={youLabel}
+          >
+            <span className="label-full">{youLabel}</span>
+            <span className="label-short">YOU</span>
+          </div>
+
+          {dividerCells}
+
+          {renderRow({
+            G,
+            playerID: opponent,
+            lanes: opponentLanes,
+            gridRow: OPPONENT_ROW,
+            side: 'opponent',
+            selectedLane: null,
+            targetableLanes,
+            interactive: false,
+            onClick: onOpponentLaneClick,
+          })}
+
+          {renderRow({
+            G,
+            playerID: you,
+            lanes: yourLanes,
+            gridRow: YOUR_ROW,
+            side: 'you',
+            selectedLane,
+            targetableLanes: new Set(),
+            interactive: interactiveYourRow,
+            onClick: onYourLaneClick,
+          })}
         </div>
-        <div className="arena-label arena-label-divider" style={{ gridColumn: 1, gridRow: DIVIDER_ROW }}>
-          Lane
-        </div>
-        <div className="arena-label arena-label-you" style={{ gridColumn: 1, gridRow: YOUR_ROW }}>
-          {youLabel}
-        </div>
-
-        {dividerCells}
-
-        {renderRow({
-          G,
-          playerID: opponent,
-          lanes: opponentLanes,
-          gridRow: OPPONENT_ROW,
-          side: 'opponent',
-          selectedLane: null,
-          targetableLanes,
-          interactive: false,
-          onClick: onOpponentLaneClick,
-        })}
-
-        {renderRow({
-          G,
-          playerID: you,
-          lanes: yourLanes,
-          gridRow: YOUR_ROW,
-          side: 'you',
-          selectedLane,
-          targetableLanes: new Set(),
-          interactive: interactiveYourRow,
-          onClick: onYourLaneClick,
-        })}
       </div>
+      <div className="arena-scroll-fade" aria-hidden="true" />
     </div>
   );
 }
