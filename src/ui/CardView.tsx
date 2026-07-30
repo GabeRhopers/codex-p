@@ -1,3 +1,5 @@
+import { Leaf, Shield, Snowflake, Sprout, Star, Sun, Swords } from 'lucide-react';
+import type { ComponentType } from 'react';
 import { CARD_PORTRAITS } from '../content/portraits';
 import type { CardDefinition, CardInstance } from '../game/types';
 
@@ -7,6 +9,14 @@ const SEASON_CLASS: Record<CardDefinition['season'], string> = {
   Spring: 'season-spring',
   Autumn: 'season-autumn',
   Neutral: 'season-neutral',
+};
+
+const SEASON_ICON: Record<CardDefinition['season'], ComponentType<{ size?: number; className?: string }>> = {
+  Summer: Sun,
+  Winter: Snowflake,
+  Spring: Sprout,
+  Autumn: Leaf,
+  Neutral: Star,
 };
 
 interface CardViewProps {
@@ -50,6 +60,8 @@ export function CardView({
     .filter(Boolean)
     .join(' ');
 
+  const SeasonIcon = SEASON_ICON[definition.season];
+
   return (
     <button
       type="button"
@@ -64,6 +76,7 @@ export function CardView({
         <span className="card-tier" data-tier={definition.tier}>
           {definition.tier}
         </span>
+        <SeasonIcon className="card-season-icon" aria-label={definition.season} size={13} />
         <span className="card-range">R{definition.range}</span>
       </div>
       {size === 'battlefield' && <CardPortrait definition={definition} />}
@@ -73,13 +86,17 @@ export function CardView({
       )}
       <div className="card-stats">
         <span className="stat stat-attack" aria-label="Attack">
-          ⚔ {instance.currentAttack}
+          <Swords size={13} /> {instance.currentAttack}
         </span>
         <span className="stat stat-shield" aria-label="Shield">
-          🛡 {instance.currentShield}
+          <Shield size={13} /> {instance.currentShield}
         </span>
       </div>
-      {definition.ability && <div className="card-ability">{definition.ability.name}</div>}
+      {/* Bench cards are compact reference-only (not clickable, see
+       * BenchStrip) and too short to fit a 5th line of text without
+       * overflowing or forcing an ugly mid-word wrap — the ability name is
+       * still reachable via the button's title tooltip. */}
+      {size === 'battlefield' && definition.ability && <div className="card-ability">{definition.ability.name}</div>}
       {instance.defending && <div className="card-flag card-flag-defending">Defending</div>}
       {instance.broken && <div className="card-flag card-flag-broken">Broken</div>}
     </button>

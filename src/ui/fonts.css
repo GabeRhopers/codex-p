@@ -1,0 +1,14 @@
+/* Self-hosted, bundled by Vite (no runtime network request, no CDN
+   dependency) — both OFL-licensed, free for any use. Cinzel gives card
+   names and headers a carved, tabletop-game presence; Inter stays legible
+   at the small sizes the rest of the UI runs at (down to ~9px on mobile
+   bench cards), which most display faces are not built for. */
+/* Latin subset only — the game's text is English-only, so there's no
+   reason to ship Cyrillic/Greek/Vietnamese glyph sets nobody will ever
+   request. */
+@import '@fontsource/cinzel/latin-600.css';
+@import '@fontsource/cinzel/latin-700.css';
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';

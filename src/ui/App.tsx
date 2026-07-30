@@ -3,6 +3,7 @@ import { CARD_DEFINITIONS } from '../content/cards';
 import { STARTER_DECKS } from '../content/decks';
 import { createSeasonsBattleGame } from '../game/game';
 import { Board } from './Board';
+import './fonts.css';
 import './board.css';
 
 const game = createSeasonsBattleGame(CARD_DEFINITIONS, {

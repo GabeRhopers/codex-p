@@ -62,9 +62,13 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 15% -10%, color-mix(in srgb, var(--summer) 10%, transparent), transparent 45%),
+    radial-gradient(circle at 100% 10%, color-mix(in srgb, var(--winter) 10%, transparent), transparent 40%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Deliberately NOT setting overflow-x: hidden here as a page-level
      "safety net" — per spec, a non-visible overflow-x forces overflow-y to
      compute as auto, which would make body (rather than the viewport)
@@ -140,7 +144,9 @@ body {
 .score {
   display: flex;
   gap: 1rem;
+  font-family: 'Cinzel', serif;
   font-weight: 600;
+  font-size: 0.95rem;
   flex-wrap: wrap;
   min-width: 0;
 }
@@ -181,9 +187,10 @@ body {
 
 .arena-title {
   margin: 0;
+  font-family: 'Cinzel', serif;
   font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--accent);
 }
@@ -247,8 +254,9 @@ body {
   left: 0;
   z-index: 2;
   background: var(--panel);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-family: 'Cinzel', serif;
+  font-size: 0.65rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: var(--text-dim);
@@ -345,76 +353,6 @@ body {
   color: var(--danger);
 }
 
-@media (max-width: 480px) {
-  /* The previous sizing here (54px label + 5×96px lanes ≈ 534px of grid
-     content, plus padding/border) was wider than the ~333px actually
-     available inside .arena-scroll on a 375-414px phone. That's what cut
-     cards off mid-content instead of at a clean lane boundary. This sizing
-     is chosen to keep ~3.5-4 lanes comfortably legible at once — the 5th
-     is a swipe away, signaled by .arena-scroll-fade and guaranteed to
-     settle on a clean edge by scroll-snap-type: x mandatory above. */
-  .arena-scroll {
-    padding: 0.5rem;
-  }
-
-  .arena-grid {
-    grid-template-columns: 32px repeat(5, 80px);
-    column-gap: 0.25rem;
-    row-gap: 0.4rem;
-  }
-
-  .label-full {
-    display: none;
-  }
-
-  .label-short {
-    display: inline;
-  }
-
-  .arena-label {
-    font-size: 0.62rem;
-    padding-right: 0.15rem;
-    justify-content: center;
-    text-align: center;
-  }
-
-  .card {
-    height: 148px;
-    padding: 0.3rem;
-    gap: 0.12rem;
-  }
-
-  .card-portrait {
-    height: 52px;
-  }
-
-  .card-name {
-    font-size: 0.68rem;
-  }
-
-  .card-form {
-    display: none;
-  }
-
-  .card-top {
-    font-size: 0.58rem;
-  }
-
-  .card-ability {
-    font-size: 0.58rem;
-  }
-
-  .card-stats {
-    font-size: 0.72rem;
-    gap: 0.35rem;
-  }
-
-  .lane-empty {
-    height: 148px;
-    font-size: 0.65rem;
-  }
-}
-
 .bench-section {
   display: flex;
   align-items: center;
@@ -467,11 +405,16 @@ body {
 }
 
 .card-bench {
-  width: 76px;
+  width: 92px;
   height: 96px;
   font-size: 0.7rem;
   padding: 0.3rem;
   flex-shrink: 0;
+}
+
+.card-bench .card-name {
+  font-size: 0.54rem;
+  letter-spacing: -0.01em;
 }
 
 .card-clickable {
@@ -510,31 +453,65 @@ body {
   border-color: var(--danger);
 }
 
+/* A left stripe alone reads faintly at bench-card size (76-84px wide) — a
+   soft top-down tint of the same season color gives the whole card a
+   recognizable "temperature" at a glance across a row of ten, not just a
+   4px sliver at the edge. Layered as background-image only (not the
+   shorthand) so it paints over .card's own background-color instead of
+   replacing it. */
 .season-summer {
   border-left: 4px solid var(--summer);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--summer) 14%, transparent), transparent 55%);
 }
 .season-winter {
   border-left: 4px solid var(--winter);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--winter) 14%, transparent), transparent 55%);
 }
 .season-spring {
   border-left: 4px solid var(--spring);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--spring) 14%, transparent), transparent 55%);
 }
 .season-autumn {
   border-left: 4px solid var(--autumn);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--autumn) 14%, transparent), transparent 55%);
 }
 .season-neutral {
   border-left: 4px solid var(--neutral);
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--neutral) 14%, transparent), transparent 55%);
 }
 
 .card-top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.3rem;
   font-size: 0.65rem;
   color: var(--text-dim);
 }
 
 .card-tier[data-tier='Gold'] {
   color: var(--accent);
+}
+
+/* Tinted to match the card's own season stripe so the icon reinforces the
+   color coding instead of just repeating it in monochrome. */
+.card-season-icon {
+  flex-shrink: 0;
+}
+.season-summer .card-season-icon {
+  color: var(--summer);
+}
+.season-winter .card-season-icon {
+  color: var(--winter);
+}
+.season-spring .card-season-icon {
+  color: var(--spring);
+}
+.season-autumn .card-season-icon {
+  color: var(--autumn);
+}
+.season-neutral .card-season-icon {
+  color: var(--neutral);
 }
 
 /* The art window in the middle of a battlefield card (bench cards skip it
@@ -571,14 +548,20 @@ body {
 }
 
 .card-name {
-  font-weight: 700;
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
   font-size: 0.8rem;
-  line-height: 1.1;
-  /* At the narrowest card widths (mobile arena lanes, bench strip) a long
-     name can be wider than the card itself. Break inside the word rather
-     than relying on .card's overflow: hidden to just guillotine it
-     mid-glyph at a spot that changes with every name's length. */
-  overflow-wrap: anywhere;
+  line-height: 1.15;
+  /* Clamp to 2 lines with a clean ellipsis instead of letting a long name
+     (e.g. "Hollow Wanderer" on a 76px-wide bench card) wrap so tight that
+     overflow-wrap: anywhere splits mid-word into an ugly orphaned
+     fragment. A normal word-boundary break is tried first; anywhere is
+     only the fallback once a single word can't fit its own line either. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: break-word;
 }
 
 .card-form {
@@ -591,6 +574,20 @@ body {
   gap: 0.5rem;
   font-weight: 600;
   margin-top: auto;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.stat-attack {
+  color: var(--danger);
+}
+
+.stat-shield {
+  color: var(--winter);
 }
 
 .card-ability {
@@ -677,4 +674,106 @@ body {
   align-items: center;
   text-align: center;
   padding-top: 4rem;
+}
+
+.board-gameover h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 2rem;
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Mobile overrides — deliberately last in the file.                  */
+/*                                                                     */
+/* Every selector below has equal specificity to its unconditional     */
+/* counterpart earlier in this file (one class each). CSS breaks a tie */
+/* like that by *source order*, not by which rule sits inside a media  */
+/* query — a media query only makes a rule's inclusion conditional, it */
+/* doesn't raise its priority. This block used to sit right after the  */
+/* arena-grid rules (much earlier in the file), which meant every one  */
+/* of these was silently losing to the later unconditional .card,      */
+/* .card-name, .card-portrait, etc. rules on every real mobile browser */
+/* — verified via getComputedStyle at a 390px viewport, which showed   */
+/* the *desktop* 190px card height and 0.8rem name size still in       */
+/* effect. Keeping this block last guarantees it always wins ties      */
+/* against anything above it, regardless of what gets added earlier in */
+/* the file later. */
+/* ------------------------------------------------------------------ */
+@media (max-width: 480px) {
+  /* The previous sizing here (54px label + 5×96px lanes ≈ 534px of grid
+     content, plus padding/border) was wider than the ~333px actually
+     available inside .arena-scroll on a 375-414px phone. That's what cut
+     cards off mid-content instead of at a clean lane boundary. This sizing
+     is chosen to keep ~3.5-4 lanes comfortably legible at once — the 5th
+     is a swipe away, signaled by .arena-scroll-fade and guaranteed to
+     settle on a clean edge by scroll-snap-type: x mandatory above. */
+  .arena-scroll {
+    padding: 0.5rem;
+  }
+
+  .arena-grid {
+    grid-template-columns: 32px repeat(5, 80px);
+    column-gap: 0.25rem;
+    row-gap: 0.4rem;
+  }
+
+  .label-full {
+    display: none;
+  }
+
+  .label-short {
+    display: inline;
+  }
+
+  .arena-label {
+    font-size: 0.62rem;
+    padding-right: 0.15rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .card {
+    height: 148px;
+    padding: 0.3rem;
+    gap: 0.12rem;
+  }
+
+  .card-portrait {
+    height: 52px;
+  }
+
+  /* Cinzel's display-serif metrics are noticeably wider per character than
+     Inter's — fine at desktop card widths, but on an 80px mobile arena
+     lane it's what pushes ordinary names like "Skirmisher" into a
+     mid-word ellipsis. Inter buys back that room without shrinking the
+     type size further, which matters more here than the carved-title look
+     does at this size anyway. */
+  .card-name {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .card-form {
+    display: none;
+  }
+
+  .card-top {
+    font-size: 0.58rem;
+  }
+
+  .card-ability {
+    font-size: 0.58rem;
+  }
+
+  .card-stats {
+    font-size: 0.72rem;
+    gap: 0.35rem;
+  }
+
+  .lane-empty {
+    height: 148px;
+    font-size: 0.65rem;
+  }
 }
