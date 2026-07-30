@@ -64,15 +64,31 @@ describe('§19 Change position — Titans move as one unit', () => {
     expect(getG(client).turnState.movesUsed).toBe(0);
   });
 
-  it('rejects sliding into a lane occupied by another card', () => {
+  it('shoves the occupant of its new lane into the lane it just vacated (§19 Ruling 5)', () => {
+    // A standard 5-lane board never has an empty lane to slide into, so
+    // this is the case that actually matters in real play, not the edge
+    // case: sliding into an occupied lane must still work.
     client = startClient({
       '0': makeSetup(deck, ['normal-r1']),
       '1': makeSetup(deck, ['titan', 'normal-r2']), // titan lanes 0-1, normal-r2 lane 2
     });
     advanceToPlayerTurn(client, '1');
 
-    client.moves.changePosition({ lane: 0, direction: 'right' }); // needs lane 2, occupied
-    expect(getG(client).players['1'].lanes.slice(0, 3)).toEqual(['1:titan', '1:titan', '1:normal-r2']);
-    expect(getG(client).turnState.movesUsed).toBe(0);
+    client.moves.changePosition({ lane: 0, direction: 'right' }); // slides into lane 2, occupied by normal-r2
+    const G = getG(client);
+    expect(G.players['1'].lanes.slice(0, 3)).toEqual(['1:normal-r2', '1:titan', '1:titan']);
+    expect(G.turnState.movesUsed).toBe(1);
+  });
+
+  it('the displaced card is not marked as having acted this turn', () => {
+    client = startClient({
+      '0': makeSetup(deck, ['normal-r1']),
+      '1': makeSetup(deck, ['titan', 'normal-r2']), // titan lanes 0-1, normal-r2 lane 2
+    });
+    advanceToPlayerTurn(client, '1');
+
+    client.moves.changePosition({ lane: 0, direction: 'right' }); // titan -> [1,2], normal-r2 -> [0]
+    client.moves.enterDefense({ lane: 0 }); // normal-r2, now at lane 0, still free to act
+    expect(getG(client).cardInstances['1:normal-r2'].defending).toBe(true);
   });
 });

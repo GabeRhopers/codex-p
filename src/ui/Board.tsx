@@ -451,6 +451,11 @@ function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefe
   const canMove = movesLeft >= 1;
   const abilityCost = definition.ability?.costsBothMoves ? MOVES_PER_TURN : 1;
   const canAbility = !!definition.ability && movesLeft >= abilityCost && (!instance.defending || definition.ability.usableWhileDefending === true);
+  // `lane` is always a Titan's *lower* occupied index (see renderRow), so
+  // its rightmost occupied lane is `lane + footprint - 1`, not `lane`
+  // itself — the right-move bound has to account for that or it'll offer
+  // "Move Right" one lane past where a 2-wide Titan can actually go.
+  const footprint = definition.form === 'Titan' ? 2 : 1;
 
   return (
     <div className="action-panel">
@@ -493,7 +498,7 @@ function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefe
             Move Left
           </button>
         )}
-        {canMove && lane < BOARD_SIZE - 1 && (
+        {canMove && lane < BOARD_SIZE - footprint && (
           <button type="button" className="btn" onClick={() => onMove('right')}>
             Move Right
           </button>

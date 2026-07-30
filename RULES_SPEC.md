@@ -74,8 +74,10 @@ spec later without changing it.
 ## 7. Position changes (§19)
 
 - Costs 1 move. A Normal card may swap with one adjacent friendly Normal
-  card. A Titan moves as a unit and must remain in two adjacent lanes.
-  Moving forfeits any other action for that card this turn.
+  card. A Titan moves as a unit and must remain in two adjacent lanes,
+  shoving whatever occupied its newly-entered lane back into the lane it
+  just vacated — see Ruling 5. Moving forfeits any other action for that
+  card this turn.
 
 ## 8. Abilities & Mind Control (§20–§21)
 
@@ -143,3 +145,20 @@ against the shared card instance before applying them.
 **Default:** Attack dice never go below 1, Shield dice never go below 0 via
 ability effects. Configurable per-ability in card data if a future card
 needs an explicit exception (none do in the MVP roster).
+
+### Ruling 5 — `titanMoveDisplacesOccupant = true`
+
+**Question:** §19 grants a Normal card a swap with one adjacent friendly
+Normal card when it changes position, but says nothing about what happens
+when a Titan slides and the one genuinely new lane isn't empty.
+
+**Default:** `true` — the occupant of the Titan's newly-entered lane is
+shoved into the lane the Titan just vacated, extending the same swap
+concept §19 already gives Normal cards across the Titan's two-lane
+footprint. The alternative reading (`false`: the destination must be
+strictly empty) was the MVP's original, untested assumption, and it makes
+Titan movement effectively dead for most of a match — a standard 5-lane
+starting board has no empty lanes at all, and a destroyed card is normally
+replaced from the bench immediately (§22) rather than leaving its lane
+empty, so a strictly-empty-only Titan can only ever move after its
+controller's bench is fully exhausted.

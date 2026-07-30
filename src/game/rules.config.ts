@@ -26,3 +26,19 @@ export const brokenStateRequiresFollowUpHit = true;
 /** Ruling 4: floors for Attack/Shield dice under ability effects. */
 export const attackFloor = 1;
 export const shieldFloor = 0;
+
+/**
+ * Ruling 5: §19 defines a swap for a moving Normal card ("may swap with
+ * one adjacent friendly Normal card") but is silent on what happens when a
+ * Titan slides into a lane pair and the one genuinely new lane isn't
+ * empty. A strict "must be empty" reading would make Titan movement
+ * legal almost never — a standard starting board fills all 5 lanes, so an
+ * empty lane only appears once a destroyed card's owner has run out of
+ * bench replacements.
+ *
+ * `true` (default): the occupant of the newly-entered lane is shoved into
+ * the lane the Titan just vacated — the same swap concept §19 already
+ * grants Normal cards, just extended across the Titan's two-lane
+ * footprint instead of requiring the destination to be empty.
+ */
+export const titanMoveDisplacesOccupant = true;

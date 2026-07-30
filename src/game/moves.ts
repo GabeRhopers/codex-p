@@ -2,7 +2,7 @@ import type { Ctx, FnContext } from 'boardgame.io';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { isValidLane, otherPlayer, resolveRangePattern } from './board';
 import { applyDamageToInstance, resolveDestructions } from './damage';
-import { MOVES_PER_TURN, titanMultiHitOnOverlap } from './rules.config';
+import { MOVES_PER_TURN, titanMoveDisplacesOccupant, titanMultiHitOnOverlap } from './rules.config';
 import { findInstance, instanceAtLane, lanesOccupiedBy } from './state';
 import type { CardDefinitionRegistry, GameState } from './types';
 import type { TargetSide } from './board';
@@ -187,14 +187,25 @@ export function changePositionMove(
     const occupied = lanesOccupiedBy(G, playerID, instance.instanceId);
     const newLanes = occupied.map((lane) => lane + delta);
     if (!newLanes.every(isValidLane)) return INVALID_MOVE;
-    for (const lane of newLanes) {
-      if (!occupied.includes(lane) && G.players[playerID].lanes[lane] !== null) {
-        return INVALID_MOVE; // the one genuinely new lane must be empty
+
+    const vacatedLane = occupied.find((lane) => !newLanes.includes(lane))!;
+    const enteredLane = newLanes.find((lane) => !occupied.includes(lane))!;
+    const displacedInstanceId = G.players[playerID].lanes[enteredLane];
+
+    if (displacedInstanceId !== null) {
+      if (!titanMoveDisplacesOccupant) return INVALID_MOVE; // Ruling 5 (off): the lane must be empty
+      // §9.3 caps a deck at 1 Titan, so the only thing a Titan can ever
+      // find in its own new lane is a Normal card — guarded anyway rather
+      // than assumed.
+      if (registry[findInstance(G, displacedInstanceId).defId].form !== 'Normal') {
+        return INVALID_MOVE;
       }
     }
-    for (const lane of occupied) {
-      if (!newLanes.includes(lane)) G.players[playerID].lanes[lane] = null;
-    }
+
+    // Ruling 5 (titanMoveDisplacesOccupant): shove whatever the Titan's
+    // new lane held into the lane it just vacated, mirroring a Normal
+    // card's own adjacent swap instead of requiring an empty destination.
+    G.players[playerID].lanes[vacatedLane] = displacedInstanceId;
     for (const lane of newLanes) {
       G.players[playerID].lanes[lane] = instance.instanceId;
     }
