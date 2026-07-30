@@ -63,6 +63,15 @@ describe('§9 Standard Mode deck legality', () => {
         }, 0);
         expect(footprint).toBeLessThanOrEqual(BOARD_SIZE);
       });
+
+      it('draws from more than one season (a real collection is not mono-season)', () => {
+        const seasons = new Set(
+          deck.setup.deckDefIds
+            .map((defId) => CARD_DEFINITIONS[defId].season)
+            .filter((season) => season !== 'Neutral'),
+        );
+        expect(seasons.size).toBeGreaterThanOrEqual(2);
+      });
     });
   }
 

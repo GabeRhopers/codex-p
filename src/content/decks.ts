@@ -9,51 +9,62 @@ export interface StarterDeck {
 
 /**
  * Two fixed, zero-overlap starter decks for the MVP (no custom deckbuilder
- * — see PLAN's Phase 2 scope). Each `setup.startingBattlefieldDefIds` is a
- * sensible default lineup (Titan + 3 Normals = 5 lanes exactly); Phase 3's
- * UI can let players pick a different opening lineup from their own deck
- * later without any engine change.
+ * — see PLAN's Phase 2 scope). §9 never requires a deck to be built from a
+ * single season — that was only ever this MVP's original (and misleading)
+ * content choice, not a rule. A real player's collection spans every
+ * season, so each starter deck here is a deliberate cross-season mix: both
+ * draw from Summer, Winter, and Neutral ranks rather than being a
+ * mono-season "theme deck". They keep distinct *archetypes* (aggressive vs.
+ * defensive) instead — that's what actually needs to differ between two
+ * starter decks for the matchup to be interesting.
+ *
+ * Each `setup.startingBattlefieldDefIds` is a sensible default lineup
+ * (Titan + 3 Normals = 5 lanes exactly); Phase 3's UI can let players pick
+ * a different opening lineup from their own deck later without any engine
+ * change.
  */
 export const STARTER_DECKS: Record<string, StarterDeck> = {
-  summerPressure: {
-    id: 'summerPressure',
-    name: 'Summer Pressure',
-    description: 'Aggressive Summer offense backed by Neutral utility.',
+  vanguardAlliance: {
+    id: 'vanguardAlliance',
+    name: "Vanguard's Alliance",
+    description:
+      'Aggressive strike force drawn from across Summer, Winter, and Neutral ranks.',
     setup: {
       deckDefIds: [
         'sunblade_vanguard',
         'ember_striker',
         'solar_lancer',
-        'dune_skirmisher',
+        'ice_piercer',
+        'snowbound_guard',
         'firebrand',
-        'scorchcaller',
-        'wayfarer',
+        'blizzardcaller',
         'bulwark_drifter',
-        'trickster',
         'meadow_runner',
+        'mesmerist',
       ],
-      startingBattlefieldDefIds: ['sunblade_vanguard', 'ember_striker', 'solar_lancer', 'firebrand'],
+      startingBattlefieldDefIds: ['sunblade_vanguard', 'ember_striker', 'ice_piercer', 'firebrand'],
     },
   },
 
-  winterControl: {
-    id: 'winterControl',
-    name: 'Winter Control',
-    description: 'Defensive Winter walls and debuffs backed by Neutral utility.',
+  wardenAlliance: {
+    id: 'wardenAlliance',
+    name: "Warden's Alliance",
+    description:
+      'Defensive formation drawn from across Winter, Summer, and Neutral ranks.',
     setup: {
       deckDefIds: [
         'glacier_warden',
+        'dune_skirmisher',
         'frost_sentinel',
-        'ice_piercer',
-        'snowbound_guard',
         'frostguard',
-        'blizzardcaller',
+        'wayfarer',
+        'scorchcaller',
+        'trickster',
         'hollow_wanderer',
         'stonebound_sentry',
-        'mesmerist',
         'snowdrift_scout',
       ],
-      startingBattlefieldDefIds: ['glacier_warden', 'frost_sentinel', 'ice_piercer', 'frostguard'],
+      startingBattlefieldDefIds: ['glacier_warden', 'dune_skirmisher', 'wayfarer', 'frostguard'],
     },
   },
 };

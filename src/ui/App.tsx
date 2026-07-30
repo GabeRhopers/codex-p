@@ -6,8 +6,8 @@ import { Board } from './Board';
 import './board.css';
 
 const game = createSeasonsBattleGame(CARD_DEFINITIONS, {
-  '0': STARTER_DECKS.summerPressure.setup,
-  '1': STARTER_DECKS.winterControl.setup,
+  '0': STARTER_DECKS.vanguardAlliance.setup,
+  '1': STARTER_DECKS.wardenAlliance.setup,
 });
 
 const GameClient = Client({

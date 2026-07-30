@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
 import { CARD_DEFINITIONS } from '../content/cards';
+import { STARTER_DECKS } from '../content/decks';
 import { otherPlayer, resolveRangePattern } from '../game/board';
 import { BOARD_SIZE, MOVES_PER_TURN } from '../game/rules.config';
 import type { GameState } from '../game/types';
@@ -179,8 +180,16 @@ export function Board({ G, ctx, moves, events }: BoardProps<GameState>) {
   );
 }
 
+// Mirrors App.tsx's playerID -> starter deck assignment. Sourcing the name
+// from STARTER_DECKS itself (rather than a second hardcoded literal here)
+// means the two can never drift apart the way a duplicated string could.
+const PLAYER_DECK_NAMES: Record<string, string> = {
+  '0': STARTER_DECKS.vanguardAlliance.name,
+  '1': STARTER_DECKS.wardenAlliance.name,
+};
+
 function STARTER_NAME(playerID: string): string {
-  return playerID === '0' ? 'Summer Pressure' : 'Winter Control';
+  return PLAYER_DECK_NAMES[playerID] ?? playerID;
 }
 
 // Grid rows within the arena (see Arena below) — kept as named constants so

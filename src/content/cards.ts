@@ -3,10 +3,16 @@ import { shieldFloor } from '../game/rules.config';
 import type { CardDefinitionRegistry } from '../game/types';
 
 /**
- * MVP card roster (Phase 2 of the project plan): 20 unique cards split into
- * two zero-overlap 10-card starter decks — Summer Pressure (aggressive) and
- * Winter Control (defensive) — rather than the full 44-card long-term
- * vision. See RULES_SPEC.md and PLAN for the scope rationale.
+ * MVP card roster (Phase 2 of the project plan): 20 unique cards, rather
+ * than the full 44-card long-term vision. See RULES_SPEC.md and PLAN for
+ * the scope rationale.
+ *
+ * Nothing in §9 (deck legality) requires a deck to draw from a single
+ * season — real players build decks from their whole collection. The two
+ * starter decks in src/content/decks.ts are deliberately cross-season
+ * mixes (see that file); the two groupings below are purely this file's
+ * own organization by season, not a statement about which deck a card
+ * belongs to.
  *
  * Ability effects reuse the engine's own mutators (adjustAttack,
  * restoreShield from src/game/damage.ts) so every stat change goes through
@@ -14,7 +20,7 @@ import type { CardDefinitionRegistry } from '../game/types';
  * content re-implementing it ad hoc.
  */
 export const CARD_DEFINITIONS: CardDefinitionRegistry = {
-  // --- Summer Pressure ------------------------------------------------
+  // --- Summer & Neutral cards ------------------------------------------
 
   sunblade_vanguard: {
     id: 'sunblade_vanguard',
@@ -143,7 +149,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
     tier: 'Common',
   },
 
-  // --- Winter Control --------------------------------------------------
+  // --- Winter & Neutral cards --------------------------------------------
 
   glacier_warden: {
     id: 'glacier_warden',

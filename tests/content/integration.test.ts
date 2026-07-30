@@ -13,8 +13,8 @@ import { createSeasonsBattleGame } from '../../src/game/game';
  */
 function startRealMatch() {
   const game = createSeasonsBattleGame(CARD_DEFINITIONS, {
-    '0': STARTER_DECKS.summerPressure.setup,
-    '1': STARTER_DECKS.winterControl.setup,
+    '0': STARTER_DECKS.vanguardAlliance.setup,
+    '1': STARTER_DECKS.wardenAlliance.setup,
   });
   const client = Client({ game, numPlayers: 2 });
   client.start();
@@ -30,23 +30,23 @@ describe('Real content integration', () => {
       '0:sunblade_vanguard',
       '0:sunblade_vanguard',
       '0:ember_striker',
-      '0:solar_lancer',
+      '0:ice_piercer',
       '0:firebrand',
     ]);
     expect(G.players['0'].bench).toEqual([
-      '0:dune_skirmisher',
-      '0:scorchcaller',
-      '0:wayfarer',
+      '0:solar_lancer',
+      '0:snowbound_guard',
+      '0:blizzardcaller',
       '0:bulwark_drifter',
-      '0:trickster',
       '0:meadow_runner',
+      '0:mesmerist',
     ]);
 
     expect(G.players['1'].lanes).toEqual([
       '1:glacier_warden',
       '1:glacier_warden',
-      '1:frost_sentinel',
-      '1:ice_piercer',
+      '1:dune_skirmisher',
+      '1:wayfarer',
       '1:frostguard',
     ]);
     client.stop();
