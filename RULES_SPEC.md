@@ -153,28 +153,37 @@ Normal card when it changes position, but says nothing about what happens
 when a move would put a Titan and a Normal card in each other's way — in
 either direction.
 
-**Default:** `true` — displacement, both directions:
+**Default:** `true` — displacement, both directions, both built on the same
+single operation (`applyTitanShove` in `src/game/moves.ts`): a Titan steps
+one lane, claiming a new lane and vacating its old one, and whatever
+occupied the newly-claimed lane is relocated into the lane just vacated.
+That's always a closed 1-for-1 trade — the Titan's footprint size never
+changes, and §9.3 caps a deck at 1 Titan so the occupant is always a single
+Normal card that always fits the one vacated lane — so it never depends on
+anything further down the board, and the only way it fails is the Titan
+itself running off the edge of the board.
 
-- A Titan's own move shoves the occupant of its newly-entered lane into
-  the lane it just vacated, extending the same swap concept §19 already
-  gives Normal cards across the Titan's two-lane footprint. The
-  alternative reading (`false`: the destination must be strictly empty)
-  was the MVP's original, untested assumption, and it makes Titan
+- A Titan's own move calls this directly, extending the same swap concept
+  §19 already gives Normal cards across the Titan's two-lane footprint.
+  The alternative reading (`false`: the destination must be strictly
+  empty) was the MVP's original, untested assumption, and it makes Titan
   movement effectively dead for most of a match — a standard 5-lane
   starting board has no empty lanes at all, and a destroyed card is
   normally replaced from the bench immediately (§22) rather than leaving
   its lane empty, so a strictly-empty-only Titan can only ever move after
   its controller's bench is fully exhausted.
-- Symmetrically, a Normal card's move can push an adjacent Titan too — but
-  a Titan can never be split across non-adjacent lanes, so this isn't a
-  simple 1-for-1 swap the way two Normal cards trade places. It walks past
-  the Titan, and past anything *further* blocking it, looking for an
-  actual empty lane to absorb the whole line. If one exists before the
-  edge of the board, every unit in the line — the Titan and every card
-  between it and the gap — shifts over together in one move. If the line
-  runs into the edge of the board first, the entire move fails and nothing
-  shifts: a Normal card pinned against a Titan that's itself pinned
-  against something on its own far side genuinely has nowhere to go.
-  Implemented as `planPushChain` in `src/game/moves.ts`, reused directly
-  by the UI (`Board.tsx`'s `canSlide`) so button visibility and actual
-  move legality can never drift apart.
+- Symmetrically, a Normal card's move can push an adjacent Titan too —
+  implemented as the exact same operation, just triggered from the Normal
+  card's Move button with the Titan stepping in the *opposite* direction
+  (toward, and then past, the mover's own lane). That direction is
+  provably always the mover's own lane landing in the Titan's
+  newly-vacated spot: three already-valid, already-adjacent lanes (the
+  Titan's two occupied lanes plus the mover's) simply rotate one step, so
+  it can never fail on bounds either, and it never needs to look past the
+  Titan's own two lanes for room. (An earlier implementation wrongly
+  required a genuinely empty lane somewhere further past the Titan,
+  cascading through anything else in the way — that was an unnecessary
+  restriction inconsistent with how the Titan's own move already worked,
+  and it rejected moves that should succeed.) Reused directly by the UI
+  (`Board.tsx`'s `canSlide`) so button visibility and actual move legality
+  can never drift apart.

@@ -94,103 +94,59 @@ describe('§19 Change position — Titans move as one unit', () => {
 });
 
 describe('§19 Change position — a Normal card pushing an adjacent Titan (Ruling 5)', () => {
-  it('pushes the Titan one further lane when its far side is empty', () => {
+  // This corrects an earlier, wrong implementation of this exact rule: the
+  // first version required an actually-*empty* lane somewhere past the
+  // Titan (cascading further if something else was in the way too), which
+  // is both needlessly restrictive and, worse, inconsistent with how the
+  // Titan's *own* move already works (a closed 1-for-1 trade that never
+  // needs empty space at all — see applyTitanShove's doc comment). The
+  // correct behaviour, confirmed against a real reported case: pushing a
+  // Normal card into an adjacent Titan is that same trade, just triggered
+  // from the other side — it always succeeds, and nothing beyond the
+  // Titan's own two lanes and the mover's is ever touched.
+
+  it('always succeeds — the mover lands on the Titan\'s far side, the Titan shifts toward the mover', () => {
+    // titan(0,1) - normal-r1(2), pushing left. This is the exact shape
+    // from the reported case (a Titan pinned at the true board edge) that
+    // was wrongly rejected by the old implementation.
     client = startClient({
-      '0': makeSetup(deck, ['normal-r1']),
-      '1': makeSetup(deck, ['normal-r2', 'titan']), // normal-r2 lane 0, titan lanes 1-2, lanes 3-4 empty
+      '0': makeSetup(deck, ['normal-r2']),
+      '1': makeSetup(deck, ['titan', 'normal-r1']),
     });
     advanceToPlayerTurn(client, '1');
 
-    client.moves.changePosition({ lane: 0, direction: 'right' }); // pushes into the titan's near lane (1)
+    client.moves.changePosition({ lane: 2, direction: 'left' });
     const G = getG(client);
-    expect(G.players['1'].lanes).toEqual([null, '1:normal-r2', '1:titan', '1:titan', null]);
+    expect(G.players['1'].lanes).toEqual(['1:normal-r1', '1:titan', '1:titan', null, null]);
     expect(G.turnState.movesUsed).toBe(1);
   });
 
-  it('is rejected when the Titan has nowhere to go (the reported scenario: pinned against another card)', () => {
-    // This is the exact shape of the reported bug: Normal - Titan - Normal,
-    // with the far side of the Titan occupied. Even with push-through
-    // implemented, this specific arrangement has no legal resolution — the
-    // Titan can't be split, and its only escape lane is taken.
+  it('a card on the Titan\'s far side (opposite the mover) is never touched', () => {
+    // normal-r2(0) - titan(1,2) - normal-r1(3), pushing left. normal-r2 is
+    // exactly the kind of card that used to be blamed for "pinning" the
+    // Titan under the old (wrong) model — it's irrelevant here, since the
+    // Titan only ever trades places with the mover itself.
     client = startClient({
-      '0': makeSetup(deck, ['normal-r1']),
-      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2']), // normal-r1 lane 0, titan lanes 1-2, normal-r2 lane 3
+      '0': makeSetup(deck, ['normal-r3']),
+      '1': makeSetup(deck, ['normal-r2', 'titan', 'normal-r1']),
     });
     advanceToPlayerTurn(client, '1');
 
-    client.moves.changePosition({ lane: 3, direction: 'left' }); // would need the titan to vacate into lane 0, occupied
+    client.moves.changePosition({ lane: 3, direction: 'left' });
     const G = getG(client);
-    expect(G.players['1'].lanes).toEqual(['1:normal-r1', '1:titan', '1:titan', '1:normal-r2', null]);
-    expect(G.turnState.movesUsed).toBe(0);
-  });
-
-  it('is rejected when pushing the Titan would run it off the edge of the board', () => {
-    client = startClient({
-      '0': makeSetup(deck, ['normal-r1']),
-      '1': makeSetup(deck, ['normal-r1', 'normal-r2', 'normal-r3', 'titan']), // titan pinned at the true right edge, lanes 3-4
-    });
-    advanceToPlayerTurn(client, '1');
-
-    client.moves.changePosition({ lane: 2, direction: 'right' }); // titan would need lane 5 — doesn't exist
-    const G = getG(client);
-    expect(G.players['1'].lanes).toEqual(['1:normal-r1', '1:normal-r2', '1:normal-r3', '1:titan', '1:titan']);
-    expect(G.turnState.movesUsed).toBe(0);
-  });
-
-  it('cascades through the Titan AND a further Normal card when there is room past both', () => {
-    // normal-r1(0) - titan(1,2) - normal-r2(3) - empty(4). Pushing normal-r1
-    // right has to walk past the Titan, find normal-r2 still in the way,
-    // and keep going to lane 4 before it finds real room. Every unit in the
-    // line should end up shifted by exactly one lane.
-    client = startClient({
-      '0': makeSetup(deck, ['fragile']),
-      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2']),
-    });
-    advanceToPlayerTurn(client, '1');
-
-    client.moves.changePosition({ lane: 0, direction: 'right' });
-    const G = getG(client);
-    expect(G.players['1'].lanes).toEqual([
-      null,
-      '1:normal-r1',
-      '1:titan',
-      '1:titan',
-      '1:normal-r2',
-    ]);
+    expect(G.players['1'].lanes).toEqual(['1:normal-r2', '1:normal-r1', '1:titan', '1:titan', null]);
     expect(G.turnState.movesUsed).toBe(1);
   });
 
-  it('rejects the cascade when the Titan and a further Normal card leave no room anywhere', () => {
-    // normal-r1(0) - titan(1,2) - normal-r2(3) - normal-r3(4): completely
-    // full board in that direction, no empty lane to absorb the push at any
-    // depth. Nothing should move.
+  it('the Titan is not marked as having acted, even though it was the one displaced', () => {
     client = startClient({
-      '0': makeSetup(deck, ['fragile']),
-      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2', 'normal-r3']),
+      '0': makeSetup(deck, ['normal-r2']),
+      '1': makeSetup(deck, ['titan', 'normal-r1']),
     });
     advanceToPlayerTurn(client, '1');
 
-    client.moves.changePosition({ lane: 0, direction: 'right' });
-    const G = getG(client);
-    expect(G.players['1'].lanes).toEqual([
-      '1:normal-r1',
-      '1:titan',
-      '1:titan',
-      '1:normal-r2',
-      '1:normal-r3',
-    ]);
-    expect(G.turnState.movesUsed).toBe(0);
-  });
-
-  it('cascading units other than the mover remain free to act this turn', () => {
-    client = startClient({
-      '0': makeSetup(deck, ['fragile']),
-      '1': makeSetup(deck, ['normal-r1', 'titan', 'normal-r2']),
-    });
-    advanceToPlayerTurn(client, '1');
-
-    client.moves.changePosition({ lane: 0, direction: 'right' }); // titan -> [2,3], normal-r2 -> [4]
-    client.moves.enterDefense({ lane: 4 }); // normal-r2, shifted but never the initiator, still free to act
-    expect(getG(client).cardInstances['1:normal-r2'].defending).toBe(true);
+    client.moves.changePosition({ lane: 2, direction: 'left' }); // titan -> [1,2], normal-r1 -> [0]
+    client.moves.enterDefense({ lane: 1 }); // the titan, still free to act
+    expect(getG(client).cardInstances['1:titan'].defending).toBe(true);
   });
 });

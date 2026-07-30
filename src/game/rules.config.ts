@@ -35,19 +35,25 @@ export const shieldFloor = 0;
  * a standard starting board fills all 5 lanes, so an empty lane only
  * appears once a destroyed card's owner has run out of bench replacements.
  *
- * `true` (default): displacement, both directions —
- *   - A Titan's own move shoves the occupant of its newly-entered lane
- *     into the lane it just vacated, extending §19's swap concept across
- *     its two-lane footprint instead of requiring the destination empty.
- *     Always succeeds in-bounds — this is a closed 1-for-1 trade (the
- *     Titan vacates exactly 1 lane, the occupant needs exactly 1 lane), so
- *     it never depends on anything further down the board.
- *   - A Normal card's move can push an adjacent Titan too, but a Titan
- *     can't be split, so this isn't a simple swap — it walks past the
- *     Titan (and past anything *further* blocking it) looking for an
- *     actual empty lane to absorb the whole line. If one exists before the
- *     edge of the board, every unit in the line shifts over together. If
- *     the line runs into the board edge first, the whole move fails —
- *     nothing shifts partway. See `planPushChain` in game/moves.ts.
+ * `true` (default): displacement, both directions, both built on the same
+ * single operation (`applyTitanShove` in game/moves.ts): a Titan steps by
+ * one lane, claiming a new lane and vacating its old one, and whatever
+ * occupied the newly-claimed lane is relocated into the lane just vacated.
+ * That's always a closed 1-for-1 trade — the Titan's footprint size never
+ * changes, and §9.3 caps a deck at 1 Titan so the occupant is always a
+ * single Normal card that always fits the single vacated lane — so it
+ * never depends on anything further down the board, and the only way it
+ * fails is the Titan itself running off the edge.
+ *   - A Titan's own move calls this directly, extending §19's swap concept
+ *     across its two-lane footprint instead of requiring the destination
+ *     empty.
+ *   - A Normal card's move can push an adjacent Titan too — implemented as
+ *     the exact same operation, just triggered from the Normal card's Move
+ *     button with the Titan stepping in the *opposite* direction (toward,
+ *     and then past, the mover's own lane). That's provably always the
+ *     mover's own lane landing in the Titan's newly-vacated spot: three
+ *     already-valid, already-adjacent lanes (the Titan's two plus the
+ *     mover's) simply rotate one step, so this direction can never fail on
+ *     bounds either, and nothing beyond those three lanes is ever touched.
  */
 export const titanMoveDisplacesOccupant = true;

@@ -4,7 +4,6 @@ import type { BoardProps } from 'boardgame.io/react';
 import { CARD_DEFINITIONS } from '../content/cards';
 import { STARTER_DECKS } from '../content/decks';
 import { otherPlayer, resolveRangePattern } from '../game/board';
-import { planPushChain } from '../game/moves';
 import { BOARD_SIZE, MOVES_PER_TURN } from '../game/rules.config';
 import type { GameState } from '../game/types';
 import { CardView } from './CardView';
@@ -416,12 +415,12 @@ function renderRow({ G, playerID, lanes, gridRow, side, selectedLane, targetable
 /**
  * Whether to show a Move button at all — a pure read-only predicate, since
  * the real move (game/moves.ts's changePositionMove) mutates G and returns
- * INVALID_MOVE instead of a boolean. For the one case that isn't locally
- * decidable (a Normal card pushing into an adjacent Titan, which may need
- * to cascade past further cards looking for room), this calls the exact
- * same planPushChain the engine itself uses rather than re-deriving that
- * logic here — the duplicated Titan-edge-case bug earlier this project is
- * exactly the failure mode a second copy of this logic would risk again.
+ * INVALID_MOVE instead of a boolean. Both a Normal-Normal swap and a
+ * Normal card pushing into an adjacent Titan (see applyTitanShove in
+ * game/moves.ts) always succeed once the target lane is occupied and
+ * in-bounds — neither ever depends on anything further down the board —
+ * so this only needs bounds + occupancy, no re-derivation of the push
+ * logic itself.
  */
 function canSlide(G: GameState, owner: string, lane: number, footprint: number, direction: 'left' | 'right'): boolean {
   const delta = direction === 'left' ? -1 : 1;
@@ -433,12 +432,7 @@ function canSlide(G: GameState, owner: string, lane: number, footprint: number, 
   if (footprint === 2) return true; // Titan's own shove always succeeds in-bounds
 
   const targetLane = lane + delta;
-  const targetId = G.players[owner].lanes[targetLane];
-  if (!targetId) return false;
-  const targetDef = CARD_DEFINITIONS[G.cardInstances[targetId].defId];
-  if (targetDef.form === 'Normal') return true; // direct swap, always legal
-
-  return planPushChain(G, CARD_DEFINITIONS, owner, lane, targetId, delta) !== null;
+  return G.players[owner].lanes[targetLane] !== null;
 }
 
 function BenchStrip({ playerID, G, label }: { playerID: string; G: GameState; label: string }) {
