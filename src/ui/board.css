@@ -1020,6 +1020,15 @@ body {
   border-bottom: none;
 }
 
+.guide-footnote {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+}
+
 /* ------------------------------------------------------------------ */
 /* Mobile overrides — deliberately last in the file.                  */
 /*                                                                     */

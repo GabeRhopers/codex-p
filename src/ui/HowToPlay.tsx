@@ -24,17 +24,16 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
           <section className="guide-section">
             <h3>Objective</h3>
             <p>
-              Be first to <strong>5 Elimination Points</strong>. You score 1 point for every enemy Normal card you
-              destroy, and 2 for every enemy Titan.
+              Be first to <strong>5 Elimination Points</strong>. You score 1 point for every enemy card you
+              destroy.
             </p>
           </section>
 
           <section className="guide-section">
             <h3>The battlefield</h3>
             <p>
-              Each side has <strong>5 lanes</strong>. Your lane 3 faces your opponent&rsquo;s lane 3 &mdash;
-              that&rsquo;s what &ldquo;opposite&rdquo; means throughout. Most cards fill one lane; a{' '}
-              <strong>Titan</strong> fills two adjacent lanes at once, as a single unit.
+              Each side has <strong>5 lanes</strong>, one card per lane. Your lane 3 faces your
+              opponent&rsquo;s lane 3 &mdash; that&rsquo;s what &ldquo;opposite&rdquo; means throughout.
             </p>
           </section>
 
@@ -67,10 +66,8 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
               <li>
                 <span className="guide-item-name">Change Position</span>
                 <span className="guide-item-desc">
-                  A Normal card swaps places with an adjacent friendly Normal card, or pushes straight through an
-                  adjacent Titan. A Titan slides as a two-lane unit, shoving whatever was in its new lane back into
-                  the one it just left. Moving uses this card&rsquo;s whole turn &mdash; no attack or ability
-                  afterward.
+                  Swaps places with an adjacent friendly card. Moving uses this card&rsquo;s whole turn &mdash;
+                  no attack or ability afterward.
                 </span>
               </li>
               <li>
@@ -113,15 +110,6 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
               When a card is destroyed, its owner scores the point immediately and it&rsquo;s replaced free from the
               bench &mdash; no move spent. The replacement is battle-shy for one turn: it can&rsquo;t act until its
               controller&rsquo;s next turn.
-            </p>
-          </section>
-
-          <section className="guide-section">
-            <h3>Titans</h3>
-            <p>
-              Bigger Shield pools, worth <strong>2 points</strong> instead of 1, and they occupy two lanes at once.
-              That cuts both ways: a Range 2 or 3 attack whose pattern lands on both of a Titan&rsquo;s lanes hits it
-              twice, once per lane &mdash; a wide attacker is a real answer to a Titan.
             </p>
           </section>
 
@@ -172,7 +160,7 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
             <div className="guide-alliances">
               <div className="guide-alliance-card guide-alliance-vanguard">
                 <h4>Vanguard&rsquo;s Alliance</h4>
-                <p>Aggressive strike force. Leans on higher Attack and a Titan built to push forward.</p>
+                <p>Aggressive strike force. Leans on higher Attack across the board.</p>
               </div>
               <div className="guide-alliance-card guide-alliance-warden">
                 <h4>Warden&rsquo;s Alliance</h4>
@@ -198,12 +186,8 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
                   <td>5</td>
                 </tr>
                 <tr>
-                  <td>Points per Normal card destroyed</td>
+                  <td>Points per card destroyed</td>
                   <td>1</td>
-                </tr>
-                <tr>
-                  <td>Points per Titan destroyed</td>
-                  <td>2</td>
                 </tr>
                 <tr>
                   <td>Damage cap while defending</td>
@@ -212,6 +196,11 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
               </tbody>
             </table>
           </section>
+
+          <p className="guide-footnote">
+            This is Normal Mode &mdash; the only mode available right now. Titans and Seasonal Advantage are
+            planned for a future Advanced Mode.
+          </p>
         </div>
       </div>
     </div>

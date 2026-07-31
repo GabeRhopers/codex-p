@@ -3,7 +3,7 @@ import { shieldFloor } from '../game/rules.config';
 import type { CardDefinitionRegistry } from '../game/types';
 
 /**
- * MVP card roster (Phase 2 of the project plan): 20 unique cards, rather
+ * MVP card roster (Phase 2 of the project plan): 22 unique cards, rather
  * than the full 44-card long-term vision. See RULES_SPEC.md and PLAN for
  * the scope rationale.
  *
@@ -14,6 +14,15 @@ import type { CardDefinitionRegistry } from '../game/types';
  * own organization by season, not a statement about which deck a card
  * belongs to.
  *
+ * The 2 Titans (sunblade_vanguard, glacier_warden) are defined here but
+ * currently unused by either starter deck — Normal Mode (the only mode
+ * built so far) has no Titans at all; they're reserved for the future
+ * Advanced Mode, which bundles Titans with Seasonal Advantage. Nothing
+ * about their own implementation is incomplete or half-built, they're
+ * simply dormant content right now, same as the engine's Titan-handling
+ * code (applyTitanShove, the two-lane footprint, Ruling 1's multi-hit) —
+ * see RULES_SPEC.md.
+ *
  * Ability effects reuse the engine's own mutators (adjustAttack,
  * restoreShield from src/game/damage.ts) so every stat change goes through
  * the same floor/clamp logic the core engine already tests, rather than
@@ -22,6 +31,7 @@ import type { CardDefinitionRegistry } from '../game/types';
 export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   // --- Summer & Neutral cards ------------------------------------------
 
+  // Reserved for Advanced Mode — see the file-level comment above.
   sunblade_vanguard: {
     id: 'sunblade_vanguard',
     name: 'Sunblade Vanguard',
@@ -155,9 +165,25 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
     range: 2,
     tier: 'Common',
   },
+  // The roster's first Spring card — fills Vanguard's Alliance's slot
+  // vacated by removing sunblade_vanguard for Normal Mode (see the
+  // file-level comment). Unrelated to Seasonal Advantage (Advanced-Mode
+  // only, and not implemented yet either way); season here is flavor,
+  // same as every other card's.
+  thornvine_skirmisher: {
+    id: 'thornvine_skirmisher',
+    name: 'Thornvine Skirmisher',
+    season: 'Spring',
+    form: 'Normal',
+    attack: 2,
+    shield: 4,
+    range: 1,
+    tier: 'Common',
+  },
 
   // --- Winter & Neutral cards --------------------------------------------
 
+  // Reserved for Advanced Mode — see the file-level comment above.
   glacier_warden: {
     id: 'glacier_warden',
     name: 'Glacier Warden',
@@ -295,6 +321,19 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
     attack: 1,
     shield: 4,
     range: 2,
+    tier: 'Common',
+  },
+  // The roster's first Autumn card — fills Warden's Alliance's slot
+  // vacated by removing glacier_warden for Normal Mode (see the
+  // file-level comment).
+  bramble_reaper: {
+    id: 'bramble_reaper',
+    name: 'Bramble Reaper',
+    season: 'Autumn',
+    form: 'Normal',
+    attack: 1,
+    shield: 4,
+    range: 1,
     tier: 'Common',
   },
 };

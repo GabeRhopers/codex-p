@@ -10,14 +10,16 @@ describe('Card registry', () => {
     }
   });
 
-  it('has a reasonable MVP roster size (16-20 unique cards)', () => {
+  it('has a reasonable MVP roster size (16-22 unique cards)', () => {
+    // 20 Normal Mode cards (across the two starter decks) + the 2 Titans
+    // reserved for Advanced Mode — see cards.ts's file-level comment.
     const count = Object.keys(CARD_DEFINITIONS).length;
     expect(count).toBeGreaterThanOrEqual(16);
-    expect(count).toBeLessThanOrEqual(20);
+    expect(count).toBeLessThanOrEqual(22);
   });
 });
 
-describe('§9 Standard Mode deck legality', () => {
+describe('§9 Normal Mode deck legality', () => {
   for (const deck of Object.values(STARTER_DECKS)) {
     describe(deck.name, () => {
       it(`contains exactly ${DECK_SIZE} cards (§9.1)`, () => {

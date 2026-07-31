@@ -1,10 +1,18 @@
-// Standard Mode structural constants (§9-§11) and the four rulebook
-// ambiguity rulings, kept as named flags rather than baked-in logic.
-// See RULES_SPEC.md for the rulebook citations behind each of these.
+// Normal Mode structural constants (§9-§11) and the rulebook ambiguity
+// rulings, kept as named flags rather than baked-in logic. See
+// RULES_SPEC.md for the rulebook citations behind each of these.
+//
+// Normal Mode (the only mode built so far) has no Titans and no Seasonal
+// Advantage — both are reserved for a future Advanced Mode. The Titan
+// rulings below (1 and 5) and MAX_TITANS_PER_DECK aren't dead code: they're
+// exactly as correct as they've always been, just currently unreachable
+// because no Normal Mode deck includes a Titan. They stay defined and
+// tested against synthetic fixtures (see tests/game/) so Advanced Mode
+// later is "add a Titan back to a deck," not "rebuild Titan support."
 
-export const BOARD_SIZE = 5; // §10 — 5 lanes per side in Standard Mode
+export const BOARD_SIZE = 5; // §10 — 5 lanes per side in Normal Mode
 export const DECK_SIZE = 10; // §9.1
-export const MAX_TITANS_PER_DECK = 1; // §9.3
+export const MAX_TITANS_PER_DECK = 1; // §9.3 — moot in Normal Mode (0 Titans in any current deck); applies once Advanced Mode reintroduces them
 export const MAX_SPECIAL_ABILITY_CARDS = 3; // §9.4
 export const MOVES_PER_TURN = 2; // §12
 export const WIN_POINTS = 5; // §2
@@ -12,14 +20,17 @@ export const WIN_POINTS = 5; // §2
 /**
  * Ruling 1 (RULES_SPEC.md): does a Range 2/3 attack whose pattern includes
  * both of a Titan's occupied lanes damage it once per included lane, or
- * once total? `true` = literal reading of §17 (once per lane).
+ * once total? `true` = literal reading of §17 (once per lane). Dormant in
+ * Normal Mode — no deck currently includes a Titan to trigger this — but
+ * exercised by tests/game/*.test.ts against synthetic fixtures, and will
+ * matter again once Advanced Mode ships.
  */
 export const titanMultiHitOnOverlap = true;
 
 /**
  * Ruling 2: a card at 0 Shield is `broken`, not destroyed, per §16. This
  * flag exists to make that state explicit and testable rather than
- * implicit; it is always `true` in Standard Mode.
+ * implicit; it is always `true` in Normal Mode.
  */
 export const brokenStateRequiresFollowUpHit = true;
 
@@ -28,7 +39,11 @@ export const attackFloor = 1;
 export const shieldFloor = 0;
 
 /**
- * Ruling 5: §19 defines a swap for a moving Normal card ("may swap with
+ * Ruling 5: dormant in Normal Mode for the same reason as Ruling 1 above —
+ * no current deck has a Titan to move — but kept fully implemented and
+ * tested for when Advanced Mode reintroduces them.
+ *
+ * §19 defines a swap for a moving Normal card ("may swap with
  * one adjacent friendly Normal card") but is silent on what happens when a
  * move would put a Titan and a Normal card in each other's way. A strict
  * "must be empty" reading would make Titan movement legal almost never —

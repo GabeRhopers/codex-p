@@ -27,28 +27,36 @@ describe('Real content integration', () => {
     const client = startRealMatch();
     const G = client.getState()!.G;
 
+    // Normal Mode: every card is 1 lane wide, so 5 starting cards fill the
+    // board exactly (no Titan taking a double slot).
     expect(G.players['0'].lanes).toEqual([
-      '0:sunblade_vanguard',
-      '0:sunblade_vanguard',
       '0:ember_striker',
-      '0:ice_piercer',
       '0:firebrand',
+      '0:ice_piercer',
+      '0:thornvine_skirmisher',
+      '0:meadow_runner',
     ]);
     expect(G.players['0'].bench).toEqual([
       '0:solar_lancer',
       '0:snowbound_guard',
       '0:blizzardcaller',
       '0:bulwark_drifter',
-      '0:meadow_runner',
       '0:mesmerist',
     ]);
 
     expect(G.players['1'].lanes).toEqual([
-      '1:glacier_warden',
-      '1:glacier_warden',
       '1:dune_skirmisher',
-      '1:wayfarer',
       '1:frostguard',
+      '1:wayfarer',
+      '1:bramble_reaper',
+      '1:frost_sentinel',
+    ]);
+    expect(G.players['1'].bench).toEqual([
+      '1:scorchcaller',
+      '1:trickster',
+      '1:hollow_wanderer',
+      '1:stonebound_sentry',
+      '1:snowdrift_scout',
     ]);
     client.stop();
   });
@@ -57,20 +65,20 @@ describe('Real content integration', () => {
     const client = startRealMatch();
 
     // Turn 1 (player 0): can't attack yet, but abilities and moves are fine.
-    client.moves.activateAbility({ lane: 4 }); // Firebrand's Empower, self-targeted
+    client.moves.activateAbility({ lane: 1 }); // Firebrand's Empower, self-targeted
     expect(client.getState()!.G.cardInstances['0:firebrand'].currentAttack).toBe(3);
 
-    client.moves.enterDefense({ lane: 0 }); // the Titan defends (either lane index works)
-    expect(client.getState()!.G.cardInstances['0:sunblade_vanguard'].defending).toBe(true);
+    client.moves.enterDefense({ lane: 0 }); // Ember Striker defends
+    expect(client.getState()!.G.cardInstances['0:ember_striker'].defending).toBe(true);
 
-    // Turn 2 (player 1): Frostguard's Ward, then attack player 0's Titan.
-    client.moves.activateAbility({ lane: 4 }); // Frostguard's Ward, self-targeted
+    // Turn 2 (player 1): Frostguard's Ward, then attack player 0's defending card.
+    client.moves.activateAbility({ lane: 1 }); // Frostguard's Ward, self-targeted
     expect(client.getState()!.G.cardInstances['1:frostguard'].currentShield).toBe(4); // clamped at max
 
-    client.moves.attack({ attackerLane: 0, targetSide: 'center' }); // Glacier Warden vs defending Titan
+    client.moves.attack({ attackerLane: 0, targetSide: 'center' }); // Dune Skirmisher vs defending Ember Striker
     const afterAttack = client.getState()!.G;
-    // Defense Mode caps the hit at 1, regardless of the Titan's attack(4).
-    expect(afterAttack.cardInstances['0:sunblade_vanguard'].currentShield).toBe(7);
+    // Defense Mode caps the hit at 1, regardless of Dune Skirmisher's attack (2).
+    expect(afterAttack.cardInstances['0:ember_striker'].currentShield).toBe(1); // 2 - 1
 
     client.stop();
   });

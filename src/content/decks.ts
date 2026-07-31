@@ -12,26 +12,29 @@ export interface StarterDeck {
  * — see PLAN's Phase 2 scope). §9 never requires a deck to be built from a
  * single season — that was only ever this MVP's original (and misleading)
  * content choice, not a rule. A real player's collection spans every
- * season, so each starter deck here is a deliberate cross-season mix: both
- * draw from Summer, Winter, and Neutral ranks rather than being a
- * mono-season "theme deck". They keep distinct *archetypes* (aggressive vs.
- * defensive) instead — that's what actually needs to differ between two
- * starter decks for the matchup to be interesting.
+ * season, so each starter deck here is a deliberate cross-season mix. They
+ * keep distinct *archetypes* (aggressive vs. defensive) instead — that's
+ * what actually needs to differ between two starter decks for the matchup
+ * to be interesting, and it holds up on Normal-card stats alone (Vanguard's
+ * Alliance averages noticeably higher Attack / lower Shield than Warden's
+ * Alliance across their Normal cards).
  *
- * Each `setup.startingBattlefieldDefIds` is a sensible default lineup
- * (Titan + 3 Normals = 5 lanes exactly); Phase 3's UI can let players pick
- * a different opening lineup from their own deck later without any engine
- * change.
+ * Normal Mode (the only mode built so far) has no Titans at all — they're
+ * reserved for a future Advanced Mode alongside Seasonal Advantage (see
+ * RULES_SPEC.md). Each `setup.startingBattlefieldDefIds` here is 5 Normal
+ * cards, one per lane, filling the board exactly; Phase 3's UI can let
+ * players pick a different opening lineup from their own deck later
+ * without any engine change.
  */
 export const STARTER_DECKS: Record<string, StarterDeck> = {
   vanguardAlliance: {
     id: 'vanguardAlliance',
     name: "Vanguard's Alliance",
     description:
-      'Aggressive strike force drawn from across Summer, Winter, and Neutral ranks.',
+      'Aggressive strike force drawn from across Summer, Winter, Spring, and Neutral ranks.',
     setup: {
       deckDefIds: [
-        'sunblade_vanguard',
+        'thornvine_skirmisher',
         'ember_striker',
         'solar_lancer',
         'ice_piercer',
@@ -42,7 +45,13 @@ export const STARTER_DECKS: Record<string, StarterDeck> = {
         'meadow_runner',
         'mesmerist',
       ],
-      startingBattlefieldDefIds: ['sunblade_vanguard', 'ember_striker', 'ice_piercer', 'firebrand'],
+      startingBattlefieldDefIds: [
+        'ember_striker',
+        'firebrand',
+        'ice_piercer',
+        'thornvine_skirmisher',
+        'meadow_runner',
+      ],
     },
   },
 
@@ -50,10 +59,10 @@ export const STARTER_DECKS: Record<string, StarterDeck> = {
     id: 'wardenAlliance',
     name: "Warden's Alliance",
     description:
-      'Defensive formation drawn from across Winter, Summer, and Neutral ranks.',
+      'Defensive formation drawn from across Winter, Summer, Autumn, and Neutral ranks.',
     setup: {
       deckDefIds: [
-        'glacier_warden',
+        'bramble_reaper',
         'dune_skirmisher',
         'frost_sentinel',
         'frostguard',
@@ -64,7 +73,13 @@ export const STARTER_DECKS: Record<string, StarterDeck> = {
         'stonebound_sentry',
         'snowdrift_scout',
       ],
-      startingBattlefieldDefIds: ['glacier_warden', 'dune_skirmisher', 'wayfarer', 'frostguard'],
+      startingBattlefieldDefIds: [
+        'dune_skirmisher',
+        'frostguard',
+        'wayfarer',
+        'bramble_reaper',
+        'frost_sentinel',
+      ],
     },
   },
 };
