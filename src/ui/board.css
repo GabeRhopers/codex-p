@@ -786,6 +786,122 @@ body {
   line-height: 1.4;
 }
 
+/* The custom-build option reads as a deliberately different kind of
+   choice from the two fixed presets — dashed, same convention .lane-empty
+   and .card-portrait-placeholder already use for "not fixed content." */
+.deck-choice-custom {
+  border-style: dashed;
+}
+
+.deck-choice-custom:hover {
+  border-style: solid;
+}
+
+/* ------------------------------------------------------------------ */
+/* Deck builder — a denser, full-width screen (unlike the narrow         */
+/* centered .screen treatment) since it needs to show up to ~20 cards    */
+/* at once alongside a running legality summary.                        */
+/* ------------------------------------------------------------------ */
+
+.deck-builder {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 6rem; /* room above the sticky summary bar */
+}
+
+.deck-builder-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.deck-builder-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.6rem;
+  color: var(--accent);
+  margin: 0 0 0.35rem;
+}
+
+.deck-builder-note {
+  margin: 0;
+  text-align: left;
+}
+
+.deck-builder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.deck-builder-card-wrap {
+  position: relative;
+}
+
+.deck-builder-card-wrap .card {
+  width: 100%;
+}
+
+.deck-builder-pick-badge {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.deck-builder-pick-badge-starter {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #241a00; /* matches .btn-primary's dark-on-gold text */
+}
+
+.deck-builder-summary {
+  position: sticky;
+  bottom: 0.5rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.deck-builder-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.deck-builder-stat-ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.deck-builder-stat-bad {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .screen-home-actions {
   display: flex;
   gap: 0.75rem;

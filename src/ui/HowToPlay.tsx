@@ -155,8 +155,8 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
           </section>
 
           <section className="guide-section">
-            <h3>The two Alliances</h3>
-            <p>Both starter decks mix cards from several seasons rather than sticking to one &mdash; but they play very differently.</p>
+            <h3>Decks</h3>
+            <p>Each player picks their own deck before the match &mdash; there&rsquo;s no requirement to play the same kind, or even a different one from your opponent.</p>
             <div className="guide-alliances">
               <div className="guide-alliance-card guide-alliance-vanguard">
                 <h4>Vanguard&rsquo;s Alliance</h4>
@@ -167,6 +167,11 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
                 <p>Defensive formation. Leans on Shield and abilities that hold the line.</p>
               </div>
             </div>
+            <p>
+              Or build your own: pick any 10 cards (max 3 with abilities, drawing from at least 2 seasons). The
+              first 5 you pick start on the battlefield, the rest start on your bench. Your last custom deck is
+              remembered for next time.
+            </p>
           </section>
 
           <section className="guide-section">
