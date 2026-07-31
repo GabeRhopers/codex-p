@@ -132,9 +132,16 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
       id: 'trickster_feint',
       name: 'Feint',
       requiresTarget: false,
-      usableWhileDefending: true,
+      // Deliberately the mirror image of Frostguard's Ward (also a
+      // self-only, no-target Shield restore, same tier): Ward is the
+      // reliable, small top-up usable even mid-turtle in Defense Mode;
+      // Feint is the bigger, riskier burst that only works while exposed —
+      // a Trickster's whole identity is the bold, uncautious maneuver Ward
+      // is built to avoid needing. Before this, the two were literally
+      // identical (+1 Shield, usable while defending, no target) despite
+      // shipping in the same starter deck.
       effect: ({ G, casterInstanceId }) => {
-        restoreShield(G.cardInstances[casterInstanceId], 1, CARD_DEFINITIONS);
+        restoreShield(G.cardInstances[casterInstanceId], 2, CARD_DEFINITIONS);
       },
     },
   },
@@ -223,9 +230,14 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
       id: 'blizzardcaller_numbing_frost',
       name: 'Numbing Frost',
       requiresTarget: true,
+      // -2, not -1: before this it was identical to Scorchcaller's Scorch
+      // despite the two never even sharing a deck to make that obvious.
+      // Numbing Frost is Blizzardcaller's whole reason to exist as a Gold
+      // pick over the cheaper Winter Normals, so it earns a real bite
+      // rather than matching Scorch's lighter, Summer-side nick.
       effect: ({ G, targetInstanceId }) => {
         if (!targetInstanceId) return;
-        adjustAttack(G.cardInstances[targetInstanceId], -1);
+        adjustAttack(G.cardInstances[targetInstanceId], -2);
       },
     },
   },

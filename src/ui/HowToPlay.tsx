@@ -145,7 +145,7 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
               <li>
                 <span className="guide-item-name">Feint <em>&mdash; Trickster</em></span>
                 <span className="guide-item-desc">
-                  Permanently gains +1 Shield. Usable even while in Defense Mode.
+                  Permanently gains +2 Shield &mdash; but not usable while in Defense Mode.
                 </span>
               </li>
               <li>
@@ -154,7 +154,7 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
               </li>
               <li>
                 <span className="guide-item-name">Numbing Frost <em>&mdash; Blizzardcaller</em></span>
-                <span className="guide-item-desc">Permanently reduces a target&rsquo;s Attack by 1. Needs a target.</span>
+                <span className="guide-item-desc">Permanently reduces a target&rsquo;s Attack by 2. Needs a target.</span>
               </li>
               <li>
                 <span className="guide-item-name">Mesmerize <em>&mdash; Mesmerist</em></span>
