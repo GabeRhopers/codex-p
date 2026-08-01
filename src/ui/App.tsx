@@ -14,21 +14,36 @@ import './board.css';
 
 type Screen = 'home' | 'pickDeck' | 'buildDeck' | 'match';
 type PlayerID = '0' | '1';
+/** hotseat: both seats human, taking turns on the same device (existing
+ * behavior). solo: player '0' is the human, player '1' is the heuristic
+ * bot from src/game/bot.ts — the human only picks one deck, and the bot's
+ * deck is generated automatically rather than picked. */
+type Mode = 'hotseat' | 'solo';
 
 interface DeckChoice {
   setup: PlayerSetup;
   name: string;
 }
 
+/** A random starter preset, named to make it clear in the UI it's the
+ * bot's own pick rather than something the human chose for it. */
+function randomBotDeckChoice(): DeckChoice {
+  const ids = Object.keys(STARTER_DECKS);
+  const deck = STARTER_DECKS[ids[Math.floor(Math.random() * ids.length)]];
+  return { setup: deck.setup, name: `${deck.name} (Bot)` };
+}
+
 export function App() {
   const [screen, setScreen] = useState<Screen>('home');
+  const [mode, setMode] = useState<Mode>('hotseat');
   // Deck choice is symmetric and sequential: each player independently
   // picks a preset or builds their own, one after the other — unlike the
   // old "Player 1 picks, Player 2 gets whichever preset is left" shortcut,
   // that only worked because there were exactly two mutually-exclusive
   // decks. A custom deck breaks that assumption (nothing stops both
   // players choosing the same preset, or both going custom), so there's no
-  // "the other one" to auto-assign anymore.
+  // "the other one" to auto-assign anymore. Solo mode is the one exception
+  // — there, only player '0' (the human) ever reaches this flow at all.
   const [pickingPlayer, setPickingPlayer] = useState<PlayerID>('0');
   const [choices, setChoices] = useState<Partial<Record<PlayerID, DeckChoice>>>({});
   // Bumped on every new match so <Match> remounts fresh — boardgame.io's
@@ -41,13 +56,22 @@ export function App() {
   // without touching that screen's own state.
   const [showGuide, setShowGuide] = useState(false);
 
-  function beginPicking() {
+  function beginPicking(newMode: Mode) {
     setChoices({});
     setPickingPlayer('0');
+    setMode(newMode);
     setScreen('pickDeck');
   }
 
   function commitChoice(choice: DeckChoice) {
+    if (mode === 'solo') {
+      // Only the human (always player '0' in solo) picks — the bot's deck
+      // is generated, not chosen, so there's no second pick screen to go to.
+      setChoices({ '0': choice, '1': randomBotDeckChoice() });
+      setMatchKey((key) => key + 1);
+      setScreen('match');
+      return;
+    }
     setChoices((prev) => ({ ...prev, [pickingPlayer]: choice }));
     if (pickingPlayer === '0') {
       setPickingPlayer('1');
@@ -67,12 +91,18 @@ export function App() {
     commitChoice({ setup, name: 'Custom Deck' });
   }
 
-  const playerLabel = pickingPlayer === '0' ? 'Player 1' : 'Player 2';
-  const opponentDeckName = pickingPlayer === '1' ? choices['0']?.name : undefined;
+  const playerLabel = mode === 'solo' ? 'You' : pickingPlayer === '0' ? 'Player 1' : 'Player 2';
+  const opponentDeckName = mode === 'hotseat' && pickingPlayer === '1' ? choices['0']?.name : undefined;
 
   return (
     <div className="app">
-      {screen === 'home' && <Home onStart={beginPicking} onShowGuide={() => setShowGuide(true)} />}
+      {screen === 'home' && (
+        <Home
+          onStartHotseat={() => beginPicking('hotseat')}
+          onStartSolo={() => beginPicking('solo')}
+          onShowGuide={() => setShowGuide(true)}
+        />
+      )}
       {screen === 'pickDeck' && (
         <DeckSelect
           playerLabel={playerLabel}
@@ -88,7 +118,8 @@ export function App() {
         <Match
           key={matchKey}
           choices={choices as Record<PlayerID, DeckChoice>}
-          onPlayAgain={beginPicking}
+          humanPlayerID={mode === 'solo' ? '0' : undefined}
+          onPlayAgain={() => beginPicking(mode)}
           onShowGuide={() => setShowGuide(true)}
         />
       )}
@@ -99,10 +130,12 @@ export function App() {
 
 function Match({
   choices,
+  humanPlayerID,
   onPlayAgain,
   onShowGuide,
 }: {
   choices: Record<PlayerID, DeckChoice>;
+  humanPlayerID?: PlayerID;
   onPlayAgain: () => void;
   onShowGuide: () => void;
 }) {
@@ -125,5 +158,12 @@ function Match({
     '1': choices['1'].name,
   };
 
-  return <GameClient playerDeckNames={playerDeckNames} onPlayAgain={onPlayAgain} onShowGuide={onShowGuide} />;
+  return (
+    <GameClient
+      playerDeckNames={playerDeckNames}
+      humanPlayerID={humanPlayerID}
+      onPlayAgain={onPlayAgain}
+      onShowGuide={onShowGuide}
+    />
+  );
 }

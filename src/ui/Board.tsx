@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
 import { CARD_DEFINITIONS } from '../content/cards';
 import { otherPlayer, resolveRangePattern } from '../game/board';
+import { decideBotAction } from '../game/bot';
+import { computeLegalActions } from '../game/legalActions';
 import { BOARD_SIZE, MOVES_PER_TURN } from '../game/rules.config';
 import type { GameState } from '../game/types';
 import { CardView } from './CardView';
+
+/** Delay before the bot dispatches each move, so solo play reads as a
+ * beat-by-beat turn rather than the whole bot turn resolving instantly. */
+const BOT_MOVE_DELAY_MS = 650;
 
 type Selection =
   | { mode: 'idle' }
@@ -23,19 +29,73 @@ interface SeasonsBattleBoardProps extends BoardProps<GameState> {
   playerDeckNames: Record<string, string>;
   onPlayAgain: () => void;
   onShowGuide: () => void;
+  /** Set only for solo-vs-bot matches: the human's fixed playerID. Hotseat
+   * play (both seats human, taking turns on the same device) omits this, so
+   * `you` keeps flipping to whoever's turn it is each turn — the existing,
+   * unchanged behavior. In solo play the human never swaps seats, so `you`
+   * must stay pinned instead of flipping to the bot on its turns. */
+  humanPlayerID?: string;
 }
 
-export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onShowGuide }: SeasonsBattleBoardProps) {
+export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onShowGuide, humanPlayerID }: SeasonsBattleBoardProps) {
   const [selection, setSelection] = useState<Selection>({ mode: 'idle' });
 
-  const you = ctx.currentPlayer;
+  const you = humanPlayerID ?? ctx.currentPlayer;
   const opponent = otherPlayer(you);
+  const isYourTurn = ctx.currentPlayer === you;
   const winner = ctx.gameover?.winner as string | undefined;
   const starterName = (playerID: string) => playerDeckNames[playerID] ?? playerID;
 
   function resetSelection() {
     setSelection({ mode: 'idle' });
   }
+
+  // Any turn change clears a stale selection — without this, selecting a
+  // card and then ending the turn without acting on it (or, in solo play,
+  // the bot's turn arriving) would leave a dead ActionPanel referencing a
+  // lane that's no longer this turn's business.
+  useEffect(() => {
+    resetSelection();
+  }, [ctx.currentPlayer]);
+
+  // Drives the bot's side of a solo match: whenever it's the bot's turn,
+  // decide and dispatch exactly one action, on a short delay so a whole
+  // bot turn doesn't resolve in a single instant frame. Re-fires after
+  // every state change (G is a fresh object each move), which is what
+  // advances the bot one action at a time until it ends its turn.
+  useEffect(() => {
+    if (!humanPlayerID || winner) return;
+    if (ctx.currentPlayer === humanPlayerID) return;
+    const botPlayerID = ctx.currentPlayer;
+    const timer = setTimeout(() => {
+      const action = decideBotAction(G, ctx, CARD_DEFINITIONS, botPlayerID);
+      switch (action.type) {
+        case 'attack':
+          moves.attack({ attackerLane: action.attackerLane, targetSide: action.targetSide });
+          break;
+        case 'enterDefense':
+          moves.enterDefense({ lane: action.lane });
+          break;
+        case 'leaveDefense':
+          moves.leaveDefense({ lane: action.lane });
+          break;
+        case 'changePosition':
+          moves.changePosition({ lane: action.lane, direction: action.direction });
+          break;
+        case 'activateAbility':
+          moves.activateAbility({
+            lane: action.lane,
+            targetPlayerID: action.targetPlayerID,
+            targetLane: action.targetLane,
+          });
+          break;
+        case 'endTurn':
+          events.endTurn?.();
+          break;
+      }
+    }, BOT_MOVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [G, ctx, humanPlayerID, moves, events, winner]);
 
   function selectLane(lane: number) {
     const instanceId = G.players[you].lanes[lane];
@@ -133,7 +193,7 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
           </span>
         </div>
         <div className="turn-info">
-          Turn {ctx.turn} — {starterName(you)}'s move ({movesLeft} of {MOVES_PER_TURN} moves left)
+          Turn {ctx.turn} — {starterName(ctx.currentPlayer)}'s move ({movesLeft} of {MOVES_PER_TURN} moves left)
           {ctx.turn === 1 && <span className="hint"> — opening turn: no attacks yet</span>}
         </div>
         <button type="button" className="btn btn-guide" onClick={onShowGuide}>
@@ -153,11 +213,11 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
         opponent={opponent}
         youLabel={starterName(you)}
         opponentLabel={starterName(opponent)}
-        interactiveYourRow={selection.mode === 'idle' || selection.mode === 'selected'}
+        interactiveYourRow={isYourTurn && (selection.mode === 'idle' || selection.mode === 'selected')}
         selectedLane={selectedLane}
         targetableLanes={targetableLanes}
         onYourLaneClick={(lane) => {
-          if (selection.mode === 'idle' || selection.mode === 'selected') selectLane(lane);
+          if (isYourTurn && (selection.mode === 'idle' || selection.mode === 'selected')) selectLane(lane);
         }}
         onOpponentLaneClick={(lane) => {
           if (selection.mode === 'awaitingRange1Target') fireRange1Target(selection.lane, lane);
@@ -415,29 +475,6 @@ function renderRow({ G, playerID, lanes, gridRow, side, selectedLane, targetable
   return cells;
 }
 
-/**
- * Whether to show a Move button at all — a pure read-only predicate, since
- * the real move (game/moves.ts's changePositionMove) mutates G and returns
- * INVALID_MOVE instead of a boolean. Both a Normal-Normal swap and a
- * Normal card pushing into an adjacent Titan (see applyTitanShove in
- * game/moves.ts) always succeed once the target lane is occupied and
- * in-bounds — neither ever depends on anything further down the board —
- * so this only needs bounds + occupancy, no re-derivation of the push
- * logic itself.
- */
-function canSlide(G: GameState, owner: string, lane: number, footprint: number, direction: 'left' | 'right'): boolean {
-  const delta = direction === 'left' ? -1 : 1;
-  if (direction === 'left') {
-    if (lane <= 0) return false;
-  } else if (lane >= BOARD_SIZE - footprint) {
-    return false;
-  }
-  if (footprint === 2) return true; // Titan's own shove always succeeds in-bounds
-
-  const targetLane = lane + delta;
-  return G.players[owner].lanes[targetLane] !== null;
-}
-
 function BenchStrip({ playerID, G, label }: { playerID: string; G: GameState; label: string }) {
   const bench = G.players[playerID].bench;
   return (
@@ -471,38 +508,24 @@ interface ActionPanelProps {
 }
 
 function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefense, onLeaveDefense, onMove, onAbility, onCancel }: ActionPanelProps) {
-  const movesLeft = MOVES_PER_TURN - G.turnState.movesUsed;
-  const canAttack = !instance.defending && !G.turnState.attackUsed && movesLeft >= 1 && ctx.turn !== 1;
-  const canDefendToggle = movesLeft >= 1;
-  const canMove = movesLeft >= 1;
-  const abilityCost = definition.ability?.costsBothMoves ? MOVES_PER_TURN : 1;
-  const canAbility = !!definition.ability && movesLeft >= abilityCost && (!instance.defending || definition.ability.usableWhileDefending === true);
-  // `lane` is always a Titan's *lower* occupied index (see renderRow), so
-  // its rightmost occupied lane is `lane + footprint - 1`, not `lane`
-  // itself — the right-move bound has to account for that or it'll offer
-  // "Move Right" one lane past where a 2-wide Titan can actually go.
-  const footprint = definition.form === 'Titan' ? 2 : 1;
-  // §19: a Normal card may only swap with an adjacent friendly *Normal*
-  // card — it has no way to displace a Titan (only a Titan's own move can
-  // shove a Normal card aside, per Ruling 5; there's no reverse). Board
-  // edges alone aren't enough to decide whether the button should show:
-  // a Normal card sitting next to a Titan, or next to an empty lane, is
-  // just as blocked as one at the literal edge of the board, and offering
-  // the button in those cases only to have the engine silently reject it
-  // is the same bug the Titan edge case was.
-  const canMoveLeft = canMove && canSlide(G, instance.owner, lane, footprint, 'left');
-  const canMoveRight = canMove && canSlide(G, instance.owner, lane, footprint, 'right');
+  // The single source of truth for what this card may do — shared with the
+  // bot (src/game/bot.ts) so button visibility here and the bot's decision
+  // logic can never drift apart the way two independently-authored copies
+  // of the same rule eventually did earlier in this project (see the
+  // Feint/Ward ability rework).
+  const legal = computeLegalActions(G, ctx, CARD_DEFINITIONS, instance.owner, lane);
+  if (!legal) return null; // shouldn't happen — ActionPanel only renders for a selected, actable card
 
   return (
     <div className="action-panel">
       <p className="action-panel-title">{definition.name} — choose an action</p>
       <div className="action-buttons">
-        {canAttack && definition.range === 1 && (
+        {legal.attack?.range === 1 && (
           <button type="button" className="btn" onClick={() => onAttack()}>
             Attack (choose target)
           </button>
         )}
-        {canAttack && definition.range === 2 && (
+        {legal.attack?.range === 2 && (
           <>
             <button type="button" className="btn" onClick={() => onAttack('left')}>
               Attack Left Flank
@@ -512,35 +535,35 @@ function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefe
             </button>
           </>
         )}
-        {canAttack && definition.range === 3 && (
+        {legal.attack?.range === 3 && (
           <button type="button" className="btn" onClick={() => onAttack()}>
             Attack (hits 3 lanes)
           </button>
         )}
 
-        {canDefendToggle && !instance.defending && (
+        {legal.canEnterDefense && (
           <button type="button" className="btn" onClick={onEnterDefense}>
             Enter Defense Mode
           </button>
         )}
-        {canDefendToggle && instance.defending && (
+        {legal.canLeaveDefense && (
           <button type="button" className="btn" onClick={onLeaveDefense}>
             Leave Defense Mode
           </button>
         )}
 
-        {canMoveLeft && (
+        {legal.canMoveLeft && (
           <button type="button" className="btn" onClick={() => onMove('left')}>
             Move Left
           </button>
         )}
-        {canMoveRight && (
+        {legal.canMoveRight && (
           <button type="button" className="btn" onClick={() => onMove('right')}>
             Move Right
           </button>
         )}
 
-        {canAbility && (
+        {legal.ability && (
           <button type="button" className="btn btn-ability" onClick={onAbility}>
             {definition.ability!.name}
           </button>
