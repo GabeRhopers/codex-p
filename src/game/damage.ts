@@ -81,6 +81,24 @@ export function adjustAttack(instance: CardInstance, delta: number): void {
   instance.currentAttack = Math.max(attackFloor, instance.currentAttack + delta);
 }
 
+/**
+ * Reduces Shield by a fixed amount (used by damage-dealing abilities, e.g.
+ * Mesmerize) — mirrors combat's own Shield rules rather than bypassing
+ * them: Defense Mode still caps this at 1 (§18), same as being attacked,
+ * and `broken` is only set if this reduction actually bottoms Shield out
+ * (§16), exactly like a normal hit. An ability is a permanent stat
+ * adjustment (§20.4), not a direct kill — same as every other ability in
+ * the roster, this can set a card up to be destroyed by a later hit, but
+ * never destroys it outright by itself.
+ */
+export function reduceShield(instance: CardInstance, rawAmount: number): void {
+  const amount = instance.defending ? Math.min(rawAmount, 1) : rawAmount;
+  instance.currentShield = Math.max(shieldFloor, instance.currentShield - amount);
+  if (instance.currentShield <= shieldFloor) {
+    instance.broken = true;
+  }
+}
+
 /** Restores Shield (§7 — doesn't happen without an ability), clamped to the
  * card's printed maximum. Clears `broken` once Shield is above zero again,
  * since the card is no longer sitting at the destruction threshold. */

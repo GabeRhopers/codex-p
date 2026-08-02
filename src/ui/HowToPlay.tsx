@@ -147,8 +147,8 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
               <li>
                 <span className="guide-item-name">Mesmerize <em>&mdash; Wild Cobra</em></span>
                 <span className="guide-item-desc">
-                  Mind Control: costs both of your moves at once. Drops the target straight to 0 Shield and marks it
-                  Broken &mdash; the next hit of any size destroys it. Needs a target.
+                  Mind Control: costs both of your moves at once. Permanently reduces a target&rsquo;s Shield by 4
+                  (capped at 1 if they&rsquo;re defending, same as an attack). Needs a target.
                 </span>
               </li>
             </ul>

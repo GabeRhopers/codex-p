@@ -1,5 +1,4 @@
-import { adjustAttack, restoreShield } from '../game/damage';
-import { shieldFloor } from '../game/rules.config';
+import { adjustAttack, reduceShield, restoreShield } from '../game/damage';
 import type { CardDefinitionRegistry } from '../game/types';
 
 /**
@@ -24,9 +23,9 @@ import type { CardDefinitionRegistry } from '../game/types';
  * see RULES_SPEC.md.
  *
  * Ability effects reuse the engine's own mutators (adjustAttack,
- * restoreShield from src/game/damage.ts) so every stat change goes through
- * the same floor/clamp logic the core engine already tests, rather than
- * content re-implementing it ad hoc.
+ * reduceShield, restoreShield from src/game/damage.ts) so every stat
+ * change goes through the same floor/clamp/Defense-Mode logic the core
+ * engine already tests, rather than content re-implementing it ad hoc.
  *
  * Naming convention: every card's display `name` is "<season-flavored
  * word> <real animal>" (e.g. "Frost Bear") — a real animal, never a
@@ -315,13 +314,15 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
       costsBothMoves: true,
       effect: ({ G, targetInstanceId }) => {
         // §21 — Mind Control's exact effect is left to the card's own text;
-        // this MVP interpretation drops the target straight to a broken
-        // state (one more hit of any size destroys it), rather than
-        // literally swapping which player controls the card.
+        // this MVP interpretation is a heavy Shield hit (not a literal
+        // swap of card control). Originally this set Shield straight to 0
+        // and Broken unconditionally, bypassing Defense Mode's damage cap
+        // entirely — the only thing in the game that could do that. Now it
+        // goes through reduceShield like any other Shield-damaging effect,
+        // so a defending target is still capped at 1 (§18) and only the
+        // toughest cards in the roster (Shield 5-6) survive it at all.
         if (!targetInstanceId) return;
-        const target = G.cardInstances[targetInstanceId];
-        target.currentShield = shieldFloor;
-        target.broken = true;
+        reduceShield(G.cardInstances[targetInstanceId], 4);
       },
     },
   },

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { CARD_DEFINITIONS } from '../../src/content/cards';
 import { STARTER_DECKS } from '../../src/content/decks';
 import { createSeasonsBattleGame } from '../../src/game/game';
-import { startClient, getG, advanceToPlayerTurn } from '../game/fixtures';
+import { startClient, getG, advanceToPlayerTurn, endTurn } from '../game/fixtures';
 
 /**
  * A smoke test with the *real* content and engine together — the two unit
@@ -116,6 +116,47 @@ describe('Real content integration', () => {
     // Numbing Frost (Tundra Wolverine) now hits for 2, not Scorch's 1.
     client.moves.activateAbility({ lane: 0, targetPlayerID: '0', targetLane: 1 });
     expect(getG(client).cardInstances['0:ember_striker'].currentAttack).toBe(2); // 4 - 2
+
+    client.stop();
+  });
+
+  // Regression coverage for real user feedback: Mesmerize (Wild Cobra) used
+  // to set a target's Shield straight to 0 and Broken unconditionally,
+  // regardless of the target's own Shield or Defense Mode status — the
+  // only thing in the game that could bypass Defense Mode's damage cap.
+  // It's now a heavy (-4) but ordinary Shield hit via reduceShield, so it
+  // no longer auto-destroys-in-waiting the toughest cards in the roster,
+  // and Defense Mode still caps it at 1 like any other hit (§18).
+  it('Mesmerize is a heavy Shield hit, not an unconditional wipe, and still respects Defense Mode', () => {
+    const client = startClient(
+      {
+        '0': { deckDefIds: ['mesmerist', 'ember_striker'], startingBattlefieldDefIds: ['mesmerist', 'ember_striker'] },
+        '1': { deckDefIds: ['stonebound_sentry', 'trickster'], startingBattlefieldDefIds: ['stonebound_sentry', 'trickster'] },
+      },
+      CARD_DEFINITIONS,
+    );
+
+    // Turn 1 (player 0): Mesmerize against Stone Husky, the roster's
+    // tankiest card (Shield 6). The old behavior would have zeroed and
+    // Broken it outright; it should now just take a heavy, survivable hit.
+    client.moves.activateAbility({ lane: 0, targetPlayerID: '1', targetLane: 0 });
+    let G = getG(client);
+    expect(G.cardInstances['1:stonebound_sentry'].currentShield).toBe(2); // 6 - 4
+    expect(G.cardInstances['1:stonebound_sentry'].broken).toBe(false);
+
+    // Turn 2 (player 1): Shadow Fox enters Defense Mode, then forfeits its
+    // second move so play returns to player 0 with Shadow Fox still
+    // defending on player 0's next turn.
+    client.moves.enterDefense({ lane: 1 });
+    endTurn(client);
+
+    // Turn 3 (player 0): Mesmerize again, now against the defending Shadow
+    // Fox — must be capped at 1 Shield lost, exactly like a normal attack
+    // against a Defense-Mode card, not the old flat -4/wipe.
+    client.moves.activateAbility({ lane: 0, targetPlayerID: '1', targetLane: 1 });
+    G = getG(client);
+    expect(G.cardInstances['1:trickster'].currentShield).toBe(2); // 3 - 1 (capped), not 3 - 4
+    expect(G.cardInstances['1:trickster'].broken).toBe(false);
 
     client.stop();
   });
