@@ -27,6 +27,18 @@ import type { CardDefinitionRegistry } from '../game/types';
  * restoreShield from src/game/damage.ts) so every stat change goes through
  * the same floor/clamp logic the core engine already tests, rather than
  * content re-implementing it ad hoc.
+ *
+ * Naming convention: every card's display `name` is "<season-flavored
+ * word> <real animal>" (e.g. "Frost Bear") — a real animal, never a
+ * mythical one, even where the portrait art (src/content/portraits.ts)
+ * happens to depict a dragon, phoenix, yeti, or fairy; the two are allowed
+ * to diverge rather than force-fitting names to art that predates this
+ * convention. No word (season or animal) repeats across the roster,
+ * including the 2 dormant Titans. Neutral cards aren't tied to one of the
+ * 4 seasons, so their first word is a freeform evocative one instead (Ash,
+ * Dawn, Dusk, Mist, Nomad, Shadow, Stone, Wild) rather than a literal
+ * season name — `season: 'Neutral'` was already pure flavor (see above),
+ * so this doesn't change what it means mechanically.
  */
 export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   // --- Summer & Neutral cards ------------------------------------------
@@ -34,7 +46,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   // Reserved for Advanced Mode — see the file-level comment above.
   sunblade_vanguard: {
     id: 'sunblade_vanguard',
-    name: 'Sunblade Vanguard',
+    name: 'Sun Serpent',
     season: 'Summer',
     form: 'Titan',
     attack: 4,
@@ -44,7 +56,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   ember_striker: {
     id: 'ember_striker',
-    name: 'Ember Striker',
+    name: 'Ember Lion',
     season: 'Summer',
     form: 'Normal',
     attack: 4,
@@ -54,7 +66,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   solar_lancer: {
     id: 'solar_lancer',
-    name: 'Solar Lancer',
+    name: 'Solar Falcon',
     season: 'Summer',
     form: 'Normal',
     attack: 3,
@@ -64,7 +76,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   dune_skirmisher: {
     id: 'dune_skirmisher',
-    name: 'Dune Skirmisher',
+    name: 'Dune Jackal',
     season: 'Summer',
     form: 'Normal',
     attack: 2,
@@ -74,7 +86,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   firebrand: {
     id: 'firebrand',
-    name: 'Firebrand',
+    name: 'Blaze Hawk',
     season: 'Summer',
     form: 'Normal',
     attack: 2,
@@ -92,7 +104,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   scorchcaller: {
     id: 'scorchcaller',
-    name: 'Scorchcaller',
+    name: 'Scorch Boar',
     season: 'Summer',
     form: 'Normal',
     attack: 2,
@@ -111,7 +123,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   wayfarer: {
     id: 'wayfarer',
-    name: 'Wayfarer',
+    name: 'Dusk Stag',
     season: 'Neutral',
     form: 'Normal',
     attack: 1,
@@ -121,7 +133,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   bulwark_drifter: {
     id: 'bulwark_drifter',
-    name: 'Bulwark Drifter',
+    name: 'Ash Owl',
     season: 'Neutral',
     form: 'Normal',
     attack: 2,
@@ -131,7 +143,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   trickster: {
     id: 'trickster',
-    name: 'Trickster',
+    name: 'Shadow Fox',
     season: 'Neutral',
     form: 'Normal',
     attack: 1,
@@ -157,7 +169,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   meadow_runner: {
     id: 'meadow_runner',
-    name: 'Meadow Runner',
+    name: 'Dawn Hare',
     season: 'Neutral',
     form: 'Normal',
     attack: 2,
@@ -172,7 +184,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   // same as every other card's.
   thornvine_skirmisher: {
     id: 'thornvine_skirmisher',
-    name: 'Thornvine Skirmisher',
+    name: 'Bloom Fawn',
     season: 'Spring',
     form: 'Normal',
     attack: 2,
@@ -186,7 +198,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   // Reserved for Advanced Mode — see the file-level comment above.
   glacier_warden: {
     id: 'glacier_warden',
-    name: 'Glacier Warden',
+    name: 'Glacier Bear',
     season: 'Winter',
     form: 'Titan',
     attack: 3,
@@ -196,7 +208,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   frost_sentinel: {
     id: 'frost_sentinel',
-    name: 'Frost Sentinel',
+    name: 'Frost Tortoise',
     season: 'Winter',
     form: 'Normal',
     attack: 1,
@@ -206,7 +218,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   ice_piercer: {
     id: 'ice_piercer',
-    name: 'Ice Piercer',
+    name: 'Ice Viper',
     season: 'Winter',
     form: 'Normal',
     attack: 2,
@@ -216,7 +228,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   snowbound_guard: {
     id: 'snowbound_guard',
-    name: 'Snowbound Guard',
+    name: 'Snow Elk',
     season: 'Winter',
     form: 'Normal',
     attack: 2,
@@ -226,7 +238,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   frostguard: {
     id: 'frostguard',
-    name: 'Frostguard',
+    name: 'Blizzard Wolf',
     season: 'Winter',
     form: 'Normal',
     attack: 1,
@@ -245,7 +257,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   blizzardcaller: {
     id: 'blizzardcaller',
-    name: 'Blizzardcaller',
+    name: 'Tundra Wolverine',
     season: 'Winter',
     form: 'Normal',
     attack: 2,
@@ -269,7 +281,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   hollow_wanderer: {
     id: 'hollow_wanderer',
-    name: 'Hollow Wanderer',
+    name: 'Mist Badger',
     season: 'Neutral',
     form: 'Normal',
     attack: 1,
@@ -279,7 +291,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   stonebound_sentry: {
     id: 'stonebound_sentry',
-    name: 'Stonebound Sentry',
+    name: 'Stone Husky',
     season: 'Neutral',
     form: 'Normal',
     attack: 1,
@@ -289,7 +301,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   mesmerist: {
     id: 'mesmerist',
-    name: 'Mesmerist',
+    name: 'Wild Cobra',
     season: 'Neutral',
     form: 'Normal',
     attack: 1,
@@ -315,7 +327,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   },
   snowdrift_scout: {
     id: 'snowdrift_scout',
-    name: 'Snowdrift Scout',
+    name: 'Nomad Tiger',
     season: 'Neutral',
     form: 'Normal',
     attack: 1,
@@ -328,7 +340,7 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   // file-level comment).
   bramble_reaper: {
     id: 'bramble_reaper',
-    name: 'Bramble Reaper',
+    name: 'Bramble Lynx',
     season: 'Autumn',
     form: 'Normal',
     attack: 1,

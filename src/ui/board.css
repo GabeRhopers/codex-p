@@ -553,7 +553,7 @@ body {
   font-size: 0.8rem;
   line-height: 1.15;
   /* Clamp to 2 lines with a clean ellipsis instead of letting a long name
-     (e.g. "Hollow Wanderer" on a 76px-wide bench card) wrap so tight that
+     (e.g. "Tundra Wolverine" on a 76px-wide bench card) wrap so tight that
      overflow-wrap: anywhere splits mid-word into an ugly orphaned
      fragment. A normal word-boundary break is tried first; anywhere is
      only the fallback once a single word can't fit its own line either. */

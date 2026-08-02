@@ -26,16 +26,16 @@ test('Confirm Deck stays disabled until size, ability cap, and season-minimum ar
   // mono-season collection" rule (mirrored here for custom decks) should
   // still block confirming.
   for (const name of [
-    'Wayfarer',
-    'Bulwark Drifter',
-    'Trickster',
-    'Meadow Runner',
-    'Hollow Wanderer',
-    'Stonebound Sentry',
-    'Mesmerist',
-    'Snowdrift Scout',
-    'Frost Sentinel',
-    'Ice Piercer',
+    'Dusk Stag',
+    'Ash Owl',
+    'Shadow Fox',
+    'Dawn Hare',
+    'Mist Badger',
+    'Stone Husky',
+    'Wild Cobra',
+    'Nomad Tiger',
+    'Frost Tortoise',
+    'Ice Viper',
   ]) {
     await card(page, name).click();
   }
@@ -45,8 +45,8 @@ test('Confirm Deck stays disabled until size, ability cap, and season-minimum ar
 
   // Swap one Winter card for a Summer one — now two non-Neutral seasons
   // are represented, and every other rule was already satisfied.
-  await card(page, 'Ice Piercer').click(); // deselect
-  await card(page, 'Dune Skirmisher').click(); // select
+  await card(page, 'Ice Viper').click(); // deselect
+  await card(page, 'Dune Jackal').click(); // select
   await expect(page.locator('.deck-builder-stats')).toContainText('2 seasons (min. 2)');
   await expect(confirm).toBeEnabled();
 });
@@ -54,32 +54,32 @@ test('Confirm Deck stays disabled until size, ability cap, and season-minimum ar
 test('a card is only pickable up to the deck size and ability-card caps', async ({ page }) => {
   // 3 ability cards reaches MAX_SPECIAL_ABILITY_CARDS — a 4th should become
   // unpickable while ordinary cards stay pickable.
-  await card(page, 'Firebrand').click();
-  await card(page, 'Scorchcaller').click();
-  await card(page, 'Trickster').click();
+  await card(page, 'Blaze Hawk').click();
+  await card(page, 'Scorch Boar').click();
+  await card(page, 'Shadow Fox').click();
   await expect(page.locator('.deck-builder-stats')).toContainText('3 / 3 ability cards');
 
-  await expect(card(page, 'Frostguard')).toBeDisabled();
-  await expect(card(page, 'Wayfarer')).toBeEnabled();
+  await expect(card(page, 'Blizzard Wolf')).toBeDisabled();
+  await expect(card(page, 'Dusk Stag')).toBeEnabled();
 
   // Deselecting one ability card should free up the cap again.
-  await card(page, 'Trickster').click();
+  await card(page, 'Shadow Fox').click();
   await expect(page.locator('.deck-builder-stats')).toContainText('2 / 3 ability cards');
-  await expect(card(page, 'Frostguard')).toBeEnabled();
+  await expect(card(page, 'Blizzard Wolf')).toBeEnabled();
 });
 
 test('a saved custom deck is remembered the next time the builder opens', async ({ page }) => {
   const picks = [
-    'Wayfarer',
-    'Bulwark Drifter',
-    'Trickster',
-    'Meadow Runner',
-    'Hollow Wanderer',
-    'Stonebound Sentry',
-    'Mesmerist',
-    'Snowdrift Scout',
-    'Dune Skirmisher',
-    'Frost Sentinel',
+    'Dusk Stag',
+    'Ash Owl',
+    'Shadow Fox',
+    'Dawn Hare',
+    'Mist Badger',
+    'Stone Husky',
+    'Wild Cobra',
+    'Nomad Tiger',
+    'Dune Jackal',
+    'Frost Tortoise',
   ];
   for (const name of picks) {
     await card(page, name).click();

@@ -121,31 +121,31 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
             </p>
             <ul className="guide-list">
               <li>
-                <span className="guide-item-name">Empower <em>&mdash; Firebrand</em></span>
+                <span className="guide-item-name">Empower <em>&mdash; Blaze Hawk</em></span>
                 <span className="guide-item-desc">Permanently gains +1 Attack. No target needed.</span>
               </li>
               <li>
-                <span className="guide-item-name">Ward <em>&mdash; Frostguard</em></span>
+                <span className="guide-item-name">Ward <em>&mdash; Blizzard Wolf</em></span>
                 <span className="guide-item-desc">
                   Permanently gains +1 Shield. Usable even while in Defense Mode.
                 </span>
               </li>
               <li>
-                <span className="guide-item-name">Feint <em>&mdash; Trickster</em></span>
+                <span className="guide-item-name">Feint <em>&mdash; Shadow Fox</em></span>
                 <span className="guide-item-desc">
                   Permanently gains +2 Shield &mdash; but not usable while in Defense Mode.
                 </span>
               </li>
               <li>
-                <span className="guide-item-name">Scorch <em>&mdash; Scorchcaller</em></span>
+                <span className="guide-item-name">Scorch <em>&mdash; Scorch Boar</em></span>
                 <span className="guide-item-desc">Permanently reduces a target&rsquo;s Attack by 1. Needs a target.</span>
               </li>
               <li>
-                <span className="guide-item-name">Numbing Frost <em>&mdash; Blizzardcaller</em></span>
+                <span className="guide-item-name">Numbing Frost <em>&mdash; Tundra Wolverine</em></span>
                 <span className="guide-item-desc">Permanently reduces a target&rsquo;s Attack by 2. Needs a target.</span>
               </li>
               <li>
-                <span className="guide-item-name">Mesmerize <em>&mdash; Mesmerist</em></span>
+                <span className="guide-item-name">Mesmerize <em>&mdash; Wild Cobra</em></span>
                 <span className="guide-item-desc">
                   Mind Control: costs both of your moves at once. Drops the target straight to 0 Shield and marks it
                   Broken &mdash; the next hit of any size destroys it. Needs a target.

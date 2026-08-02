@@ -65,36 +65,36 @@ describe('Real content integration', () => {
     const client = startRealMatch();
 
     // Turn 1 (player 0): can't attack yet, but abilities and moves are fine.
-    client.moves.activateAbility({ lane: 1 }); // Firebrand's Empower, self-targeted
+    client.moves.activateAbility({ lane: 1 }); // Blaze Hawk's Empower, self-targeted
     expect(client.getState()!.G.cardInstances['0:firebrand'].currentAttack).toBe(3);
 
-    client.moves.enterDefense({ lane: 0 }); // Ember Striker defends
+    client.moves.enterDefense({ lane: 0 }); // Ember Lion defends
     expect(client.getState()!.G.cardInstances['0:ember_striker'].defending).toBe(true);
 
-    // Turn 2 (player 1): Frostguard's Ward, then attack player 0's defending card.
-    client.moves.activateAbility({ lane: 1 }); // Frostguard's Ward, self-targeted
+    // Turn 2 (player 1): Blizzard Wolf's Ward, then attack player 0's defending card.
+    client.moves.activateAbility({ lane: 1 }); // Blizzard Wolf's Ward, self-targeted
     expect(client.getState()!.G.cardInstances['1:frostguard'].currentShield).toBe(4); // clamped at max
 
-    client.moves.attack({ attackerLane: 0, targetSide: 'center' }); // Dune Skirmisher vs defending Ember Striker
+    client.moves.attack({ attackerLane: 0, targetSide: 'center' }); // Dune Jackal vs defending Ember Lion
     const afterAttack = client.getState()!.G;
-    // Defense Mode caps the hit at 1, regardless of Dune Skirmisher's attack (2).
+    // Defense Mode caps the hit at 1, regardless of Dune Jackal's attack (2).
     expect(afterAttack.cardInstances['0:ember_striker'].currentShield).toBe(1); // 2 - 1
 
     client.stop();
   });
 
-  // Regression coverage for a real content bug: Trickster's Feint and
-  // Frostguard's Ward used to be byte-for-byte identical abilities (same
+  // Regression coverage for a real content bug: Shadow Fox's Feint and
+  // Blizzard Wolf's Ward used to be byte-for-byte identical abilities (same
   // +1 Shield self-heal, same usableWhileDefending) despite shipping in
-  // the same starter deck, and Blizzardcaller's Numbing Frost was
-  // identical to Scorchcaller's Scorch (-1 Attack to a target). Neither
+  // the same starter deck, and Tundra Wolverine's Numbing Frost was
+  // identical to Scorch Boar's Scorch (-1 Attack to a target). Neither
   // pair had any real-content test coverage, which is how the duplication
   // went unnoticed — this locks in the fix so it can't silently regress.
   it('Feint and Numbing Frost are no longer identical to Ward and Scorch', () => {
     const client = startClient(
       {
         // ember_striker (Attack 4) exists purely so Numbing Frost's -2 has
-        // room to show up distinctly from Scorch's -1 — Trickster's own
+        // room to show up distinctly from Scorch's -1 — Shadow Fox's own
         // Attack (1) would floor either way (attackFloor = 1) and prove
         // nothing.
         '0': { deckDefIds: ['trickster', 'ember_striker'], startingBattlefieldDefIds: ['trickster', 'ember_striker'] },
@@ -103,9 +103,9 @@ describe('Real content integration', () => {
       CARD_DEFINITIONS,
     );
 
-    // Ward (Frostguard) is still usable while defending; Feint (Trickster)
-    // no longer is — that alone already distinguishes them regardless of
-    // magnitude.
+    // Ward (Blizzard Wolf) is still usable while defending; Feint (Shadow
+    // Fox) no longer is — that alone already distinguishes them regardless
+    // of magnitude.
     client.moves.enterDefense({ lane: 0 });
     expect(getG(client).cardInstances['0:trickster'].defending).toBe(true);
     client.moves.activateAbility({ lane: 0 }); // Feint, while defending: must be rejected
@@ -113,7 +113,7 @@ describe('Real content integration', () => {
     expect(getG(client).cardInstances['0:trickster'].currentShield).toBe(3); // unchanged
 
     advanceToPlayerTurn(client, '1');
-    // Numbing Frost (Blizzardcaller) now hits for 2, not Scorch's 1.
+    // Numbing Frost (Tundra Wolverine) now hits for 2, not Scorch's 1.
     client.moves.activateAbility({ lane: 0, targetPlayerID: '0', targetLane: 1 });
     expect(getG(client).cardInstances['0:ember_striker'].currentAttack).toBe(2); // 4 - 2
 
