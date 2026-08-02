@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
+    "balance": "vitest run --config vitest.balance.config.ts",
     "build:artifact": "tsc -b && vite build --config vite.config.artifact.ts"
   },
   "dependencies": {

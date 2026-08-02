@@ -21,7 +21,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Gates the deploy on everything this project actually checks locally
+  # before shipping — previously this workflow only ran `tsc -b`, so a
+  # broken Vitest test, a lint error, or a broken user flow (only caught by
+  # the Playwright suite, since it drives the real boardgame.io React
+  # Client in a browser) could still go live. Nothing below this job runs
+  # unless it passes.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc -b
+      - run: npm run test
+      - run: npm run lint
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
   build:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
