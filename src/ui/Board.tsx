@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { CARD_DEFINITIONS } from '../content/cards';
 import { otherPlayer, resolveRangePattern } from '../game/board';
 import { decideBotAction } from '../game/bot';
@@ -8,6 +9,7 @@ import { computeLegalActions } from '../game/legalActions';
 import { BOARD_SIZE, MOVES_PER_TURN } from '../game/rules.config';
 import type { GameState } from '../game/types';
 import { CardView } from './CardView';
+import { isSoundMuted, playSound, setSoundMuted } from './sound';
 
 /** Delay before the bot dispatches each move, so solo play reads as a
  * beat-by-beat turn rather than the whole bot turn resolving instantly. */
@@ -45,6 +47,15 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
   const isYourTurn = ctx.currentPlayer === you;
   const winner = ctx.gameover?.winner as string | undefined;
   const starterName = (playerID: string) => playerDeckNames[playerID] ?? playerID;
+
+  const [muted, setMuted] = useState(isSoundMuted);
+  function toggleMuted() {
+    setMuted((prev) => {
+      const next = !prev;
+      setSoundMuted(next);
+      return next;
+    });
+  }
 
   function resetSelection() {
     setSelection({ mode: 'idle' });
@@ -96,6 +107,38 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
     }, BOT_MOVE_DELAY_MS);
     return () => clearTimeout(timer);
   }, [G, ctx, humanPlayerID, moves, events, winner]);
+
+  // Diffs each new G/ctx against the previous one to fire SFX for attack,
+  // defend, destroy, and win — driven by state transitions rather than
+  // wired into individual click handlers, so bot-driven moves (which never
+  // touch those handlers) get sound exactly the same as human ones do.
+  // Independent checks, not else-if: a single attack can both fire the
+  // attack sound and, if it destroys a card, layer the destroy sound (and
+  // the win fanfare too, if that was the finishing blow) in the same tick.
+  const prevSoundStateRef = useRef<{ G: GameState; gameover: boolean } | null>(null);
+  useEffect(() => {
+    const prev = prevSoundStateRef.current;
+    if (prev) {
+      if (!prev.G.turnState.attackUsed && G.turnState.attackUsed) {
+        playSound('attack');
+      }
+
+      for (const instanceId of Object.keys(G.cardInstances)) {
+        const prevInstance = prev.G.cardInstances[instanceId];
+        if (prevInstance && !prevInstance.defending && G.cardInstances[instanceId].defending) {
+          playSound('defend');
+          break;
+        }
+      }
+
+      const currentIds = new Set(Object.keys(G.cardInstances));
+      const anyDestroyed = Object.keys(prev.G.cardInstances).some((id) => !currentIds.has(id));
+      if (anyDestroyed) playSound('destroy');
+
+      if (!prev.gameover && ctx.gameover) playSound('win');
+    }
+    prevSoundStateRef.current = { G, gameover: !!ctx.gameover };
+  }, [G, ctx.gameover]);
 
   function selectLane(lane: number) {
     const instanceId = G.players[you].lanes[lane];
@@ -196,6 +239,16 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
           Turn {ctx.turn} — {starterName(ctx.currentPlayer)}'s move ({movesLeft} of {MOVES_PER_TURN} moves left)
           {ctx.turn === 1 && <span className="hint"> — opening turn: no attacks yet</span>}
         </div>
+        <button
+          type="button"
+          className="btn btn-sound"
+          onClick={toggleMuted}
+          aria-label={muted ? 'Unmute sound' : 'Mute sound'}
+          aria-pressed={muted}
+          title={muted ? 'Unmute sound' : 'Mute sound'}
+        >
+          {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        </button>
         <button type="button" className="btn btn-guide" onClick={onShowGuide}>
           How to Play
         </button>

@@ -912,6 +912,15 @@ body {
   color: var(--text-dim);
 }
 
+.btn-sound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+  padding: 0.5rem;
+  min-width: 44px;
+}
+
 /* ------------------------------------------------------------------ */
 /* How to Play — an overlay, not a screen, so it can open from Home OR  */
 /* mid-match without costing the player their place (see HowToPlay.tsx).*/
