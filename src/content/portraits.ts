@@ -13,6 +13,7 @@ export const CARD_PORTRAITS: Record<string, string> = {
   ember_striker: 'ember_striker.png',
   glacier_warden: 'glacier_warden.png',
   blizzardcaller: 'blizzardcaller.png',
+  solar_lancer: 'solar_lancer.png',
   wayfarer: 'wayfarer.png',
   mesmerist: 'mesmerist.png',
   trickster: 'trickster.png',
