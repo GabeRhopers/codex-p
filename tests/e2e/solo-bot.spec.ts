@@ -73,9 +73,15 @@ test('a solo match reaches a real conclusion and Play Again returns to a single-
   // The human never takes a real action in this fast-forward (always ends
   // the turn immediately), so the bot always wins — solo mode's gameover
   // screen should read that as a loss, not the neutral hotseat framing.
+  // The bot's own preset is randomBotDeckChoice()'s unseeded pick between
+  // the two starter decks (App.tsx), so the score line's winner name can
+  // legitimately be either "Vanguard's Alliance (Bot)" or "Warden's
+  // Alliance (Bot)" from one run to the next — assert the shape, not one
+  // specific deck name (an earlier version of this test hardcoded
+  // "Warden's Alliance (Bot)" and was flaky in exactly this way).
   await expect(page.locator('.board-gameover h1')).toHaveText('You lose');
   await expect(page.locator('.board-gameover')).toHaveClass(/board-gameover-loss/);
-  await expect(page.locator('.board-gameover-score')).toContainText("Warden's Alliance (Bot)");
+  await expect(page.locator('.board-gameover-score')).toContainText('(Bot)');
   await expect(page.locator('.board-gameover-score')).toContainText('5');
 
   await page.getByRole('button', { name: 'Play Again' }).click();
