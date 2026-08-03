@@ -128,16 +128,33 @@ body {
 
 @media (max-width: 480px) {
   .board-header {
-    flex-direction: column;
     align-items: stretch;
   }
 
+  /* Score and turn-info each force their own full-width line; the sound
+     and guide toggles are secondary actions and share a line at half
+     width each rather than each claiming a full-width row (which used to
+     make two small icon/text buttons take as much vertical space as the
+     primary End Turn button); End Turn stays the one full-width, clearly
+     primary action, last in reading order. */
+  .score {
+    flex-basis: 100%;
+  }
+
   .turn-info {
+    flex-basis: 100%;
     order: 1;
   }
 
-  .btn-end-turn {
+  .btn-sound,
+  .btn-guide {
+    flex: 1 1 auto;
     order: 2;
+  }
+
+  .btn-end-turn {
+    flex-basis: 100%;
+    order: 3;
   }
 }
 
@@ -545,6 +562,14 @@ body {
 .card-portrait-placeholder {
   background: var(--panel);
   border-style: dashed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-portrait-placeholder-icon {
+  color: var(--text-dim);
+  opacity: 0.5;
 }
 
 .card-name {
@@ -621,9 +646,14 @@ body {
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
-  position: sticky;
-  bottom: 0.5rem;
-  z-index: 5;
+  /* Deliberately NOT position: sticky. It only ever renders right after a
+     card is selected — exactly where the player is already looking — and
+     stickying it to the viewport bottom used to overlap the very card
+     stats and bench row it needs to sit below (confirmed via real
+     getBoundingClientRect overlap, not just a screenshot artifact): with
+     nothing reserving space for it, "stuck" meant "on top of," not
+     "below." Rendering in normal flow guarantees it never covers
+     anything, at the cost of an occasional scroll on very tall boards. */
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
@@ -698,6 +728,20 @@ body {
   margin: 0;
 }
 
+/* Solo play only (hotseat has no fixed "you", so it always uses the
+   neutral gold heading above) — a real loss shouldn't look identical to a
+   win. */
+.board-gameover-loss h1 {
+  color: var(--danger);
+}
+
+.board-gameover-score {
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  color: var(--text);
+  margin: -0.75rem 0 0;
+}
+
 /* ------------------------------------------------------------------ */
 /* Pre-match screens (Home, DeckSelect) — the same centered-panel        */
 /* language as .board-gameover, generalized so any full-screen step in   */
@@ -720,6 +764,55 @@ body {
   text-align: center;
   gap: 0.75rem;
   min-height: calc(100vh - 2rem);
+}
+
+/* A small fanned spread of real card art ahead of the title — the home
+   screen previously showed nothing but text before a player had picked a
+   deck or seen a match, despite 18 of 22 cards having illustrated
+   portraits by this point. Alternating rotation direction per card (even/
+   odd) is what makes it read as a loose hand of cards rather than a plain
+   row of thumbnails. */
+.home-showcase {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.home-showcase-portrait {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 0.6rem;
+  border: 2px solid var(--panel);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background: #fff;
+  margin-left: -0.85rem;
+  transition: transform 0.15s ease;
+}
+
+.home-showcase-portrait:first-child {
+  margin-left: 0;
+}
+
+.home-showcase-portrait:nth-child(odd) {
+  transform: rotate(-6deg);
+}
+
+.home-showcase-portrait:nth-child(even) {
+  transform: rotate(6deg);
+}
+
+.home-showcase-portrait:hover {
+  transform: translateY(-6px) rotate(0deg) scale(1.08);
+  z-index: 1;
+  position: relative;
+}
+
+@media (max-width: 480px) {
+  .home-showcase-portrait {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .screen-title {
@@ -838,6 +931,9 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.75rem;
+  /* Reserves room for .deck-builder-summary's sticky bar below so it can
+     never overlap the last row of cards once it engages. */
+  padding-bottom: 6rem;
 }
 
 .deck-builder-card-wrap {
@@ -869,6 +965,11 @@ body {
 }
 
 .deck-builder-summary {
+  /* Unlike .action-panel, this bar is always on screen while picking from
+     22 cards, so staying reachable without scrolling all the way down is
+     worth keeping sticky for — but sticky alone just overlaps whatever's
+     behind it once it engages. .deck-builder-grid's bottom padding below
+     reserves the room this needs so it never covers a card. */
   position: sticky;
   bottom: 0.5rem;
   z-index: 5;
@@ -906,6 +1007,17 @@ body {
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  /* Three buttons in a row wrap awkwardly at phone widths (mid-word
+     wraps inside "Play Hotseat (2 Players)"). Stacking full-width reads
+     as a cleaner, more tappable menu than a cramped wrapped row. */
+  .screen-home-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 280px;
+  }
 }
 
 .btn-guide {

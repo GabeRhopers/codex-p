@@ -105,14 +105,22 @@ export function CardView({
 
 /**
  * The art window in the middle of a battlefield card. Falls back to a
- * plain dashed placeholder (matching the empty-lane convention already
- * used elsewhere on the board) for any card that doesn't have a portrait
- * yet — deliberately not blocking on 100% roster coverage.
+ * dashed placeholder (matching the empty-lane convention already used
+ * elsewhere on the board) for any card that doesn't have a portrait yet —
+ * deliberately not blocking on 100% roster coverage. The placeholder shows
+ * the card's own season icon, large and dim, rather than sitting empty —
+ * a bare dashed box at this size reads as a broken/missing image, not an
+ * intentional "no art yet" state.
  */
 function CardPortrait({ definition }: { definition: CardDefinition }) {
   const file = CARD_PORTRAITS[definition.id];
   if (!file) {
-    return <div className="card-portrait card-portrait-placeholder" aria-hidden="true" />;
+    const PlaceholderIcon = SEASON_ICON[definition.season];
+    return (
+      <div className="card-portrait card-portrait-placeholder" aria-hidden="true">
+        <PlaceholderIcon className="card-portrait-placeholder-icon" size={28} />
+      </div>
+    );
   }
   return (
     <div className="card-portrait">

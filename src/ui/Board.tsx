@@ -186,9 +186,23 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
   }
 
   if (winner) {
+    const loser = otherPlayer(winner);
+    // Hotseat has no single fixed "you" (the device gets passed back and
+    // forth), so the neutral "<deck> wins!" framing is all that makes
+    // sense there — solo play has a real you-vs-them outcome worth
+    // calling out distinctly rather than always reading identically to a
+    // win.
+    const isSoloMatch = !!humanPlayerID;
+    const soloWon = isSoloMatch && winner === humanPlayerID;
+    const headline = !isSoloMatch ? `${starterName(winner)} wins!` : soloWon ? 'You win!' : 'You lose';
+    const resultClass = !isSoloMatch ? '' : soloWon ? 'board-gameover-win' : 'board-gameover-loss';
     return (
-      <div className="board board-gameover">
-        <h1>{starterName(winner)} wins!</h1>
+      <div className={`board board-gameover ${resultClass}`}>
+        <h1>{headline}</h1>
+        <p className="board-gameover-score">
+          {starterName(winner)} {G.players[winner].eliminationPoints} &ndash; {G.players[loser].eliminationPoints}{' '}
+          {starterName(loser)}
+        </p>
         <button type="button" className="btn btn-primary" onClick={onPlayAgain}>
           Play Again
         </button>

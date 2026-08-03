@@ -70,7 +70,13 @@ test('a solo match reaches a real conclusion and Play Again returns to a single-
   }
 
   await expect(page.locator('.board-gameover')).toBeVisible({ timeout: 10_000 });
-  await expect(page.locator('.board-gameover h1')).toContainText('wins!');
+  // The human never takes a real action in this fast-forward (always ends
+  // the turn immediately), so the bot always wins — solo mode's gameover
+  // screen should read that as a loss, not the neutral hotseat framing.
+  await expect(page.locator('.board-gameover h1')).toHaveText('You lose');
+  await expect(page.locator('.board-gameover')).toHaveClass(/board-gameover-loss/);
+  await expect(page.locator('.board-gameover-score')).toContainText("Warden's Alliance (Bot)");
+  await expect(page.locator('.board-gameover-score')).toContainText('5');
 
   await page.getByRole('button', { name: 'Play Again' }).click();
 
