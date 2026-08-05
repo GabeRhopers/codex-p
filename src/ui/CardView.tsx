@@ -119,8 +119,13 @@ export function CardView({
       {/* Bench cards are compact reference-only (not clickable, see
        * BenchStrip) and too short to fit an ability line without
        * overflowing — the ability name is still reachable via the
-       * button's title tooltip. */}
-      {size === 'battlefield' && definition.ability && <div className="card-ability">{definition.ability.name}</div>}
+       * button's title tooltip. Battlefield cards always render this
+       * row, even when there's no ability (empty), so its presence
+       * never changes the card's total height — see .card-ability's
+       * fixed height in board.css. */}
+      {size === 'battlefield' && (
+        <div className="card-ability">{definition.ability ? definition.ability.name : ''}</div>
+      )}
 
       <div className="card-stat-row">
         <span className="card-gem card-gem-attack" aria-label="Attack">

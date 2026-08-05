@@ -431,11 +431,13 @@ body {
 }
 
 .card-battlefield {
-  /* Card-shaped rather than however-tall-content-happens-to-be: close to
-     the ~5:7 proportions of a physical trading card. min-height (not a
-     hard aspect-ratio) so a long ability name can still push a card
-     taller instead of clipping — the shape is a target, not a cage. */
-  min-height: 178px;
+  /* No explicit height here on purpose: every piece of content below
+     the art (.card-name-banner, .card-ability, .card-stat-row) is
+     itself fixed-size regardless of whether the name wraps to 1 or 2
+     lines or the ability line is empty (see those rules) — so the
+     card's total intrinsic height already comes out identical for
+     every card without needing an outer cap that could clip content
+     that runs slightly long. */
 }
 
 .card-bench {
@@ -735,6 +737,20 @@ body {
   padding: 0.2rem 0.3rem 0.05rem;
 }
 
+/* Reserves space for a full 2-line name (matches .card-name's own
+   line-height * line-clamp) even when the actual name only needs one
+   line — otherwise a short name (e.g. "Ice Viper") banner would be
+   shorter than a long one (e.g. "Blizzard Wolf") and every card in a
+   row would end up a different total height. Battlefield-only: bench
+   uses a smaller font (see .card-bench .card-name) so this size
+   wouldn't apply there anyway. */
+.card-battlefield .card-name-banner {
+  min-height: calc(0.8rem * 1.15 * 2 + 0.25rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .season-summer .card-name-banner {
   background: color-mix(in srgb, var(--summer) 16%, transparent);
 }
@@ -810,6 +826,13 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Always rendered in the DOM (see CardView), even for cards with no
+     ability, and always this exact height — so a card without an
+     ability isn't shorter than one with one; it just shows an empty
+     line where the ability name would go. */
+  line-height: 1;
+  height: 0.65rem;
+  flex-shrink: 0;
 }
 
 /* Bench-only compact status tags (bench skips the art frame, so there's
