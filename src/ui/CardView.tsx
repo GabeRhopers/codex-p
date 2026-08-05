@@ -37,14 +37,16 @@ interface CardViewProps {
 }
 
 /**
- * Renders one card face. Anatomy deliberately mirrors physical trading
- * cards (Magic/Pokémon/Hearthstone) rather than a data-table row: art
- * dominates and bleeds to the frame's own rounded top corners, tier/season/
- * range ride as small corner "gem" badges over the art instead of a plain
- * text header, the name sits in its own banner, and Attack/Shield are bold
- * corner gems rather than an inline stat line — that combination (fixed
- * card-shaped frame, dominant art, gemmed stats) is what actually reads as
- * "a card" versus a bordered info panel that happens to contain card data.
+ * Renders one card face. Anatomy deliberately mirrors physical CCG/RPG
+ * cards (Hearthstone/MTG Arena) rather than a data-table row: a chamfered
+ * cut-corner frame (see .card's clip-path) in place of a plain rounded
+ * panel, a rarity-colored border (tier), dominant art bleeding to the
+ * frame's own cut top corners, tier/season/range riding as small gem
+ * badges over the art, a ribbon-shaped nameplate, and Attack/Shield as
+ * beveled gem tokens overlapping the art/nameplate seam at the bottom
+ * corners (battlefield only — bench keeps the flat pill row, too small
+ * for the overlap to read). That combination is what reads as "a game
+ * card" versus a bordered info panel that happens to contain card data.
  */
 export function CardView({
   definition,
@@ -97,6 +99,17 @@ export function CardView({
           </span>
           {instance.defending && <div className="card-ribbon card-ribbon-defending">Defending</div>}
           {instance.broken && <div className="card-ribbon card-ribbon-broken">Broken</div>}
+          {/* Overlapping the art/nameplate seam at the bottom corners
+           * (rather than sitting in the normal flow below) is the
+           * classic CCG "stat gem" placement — see .card-stat-row. */}
+          <div className="card-stat-row">
+            <span className="card-gem card-gem-attack" aria-label="Attack">
+              <Swords size={13} /> {instance.currentAttack}
+            </span>
+            <span className="card-gem card-gem-shield" aria-label="Shield">
+              <Shield size={13} /> {instance.currentShield}
+            </span>
+          </div>
         </div>
       ) : (
         <div className="card-top">
@@ -127,14 +140,16 @@ export function CardView({
         <div className="card-ability">{definition.ability ? definition.ability.name : ''}</div>
       )}
 
-      <div className="card-stat-row">
-        <span className="card-gem card-gem-attack" aria-label="Attack">
-          <Swords size={size === 'bench' ? 10 : 13} /> {instance.currentAttack}
-        </span>
-        <span className="card-gem card-gem-shield" aria-label="Shield">
-          <Shield size={size === 'bench' ? 10 : 13} /> {instance.currentShield}
-        </span>
-      </div>
+      {size === 'bench' && (
+        <div className="card-stat-row">
+          <span className="card-gem card-gem-attack" aria-label="Attack">
+            <Swords size={10} /> {instance.currentAttack}
+          </span>
+          <span className="card-gem card-gem-shield" aria-label="Shield">
+            <Shield size={10} /> {instance.currentShield}
+          </span>
+        </div>
+      )}
 
       {size === 'bench' && instance.defending && <div className="card-flag card-flag-defending">Defending</div>}
       {size === 'bench' && instance.broken && <div className="card-flag card-flag-broken">Broken</div>}
