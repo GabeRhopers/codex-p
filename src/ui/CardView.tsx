@@ -36,6 +36,16 @@ interface CardViewProps {
   onClick?: () => void;
 }
 
+/**
+ * Renders one card face. Anatomy deliberately mirrors physical trading
+ * cards (Magic/Pokémon/Hearthstone) rather than a data-table row: art
+ * dominates and bleeds to the frame's own rounded top corners, tier/season/
+ * range ride as small corner "gem" badges over the art instead of a plain
+ * text header, the name sits in its own banner, and Attack/Shield are bold
+ * corner gems rather than an inline stat line — that combination (fixed
+ * card-shaped frame, dominant art, gemmed stats) is what actually reads as
+ * "a card" versus a bordered info panel that happens to contain card data.
+ */
 export function CardView({
   definition,
   instance,
@@ -50,6 +60,7 @@ export function CardView({
     'card',
     size === 'bench' ? 'card-bench' : 'card-battlefield',
     SEASON_CLASS[definition.season],
+    `card-tier-${definition.tier.toLowerCase()}`,
     selected ? 'card-selected' : '',
     targetable ? 'card-targetable' : '',
     clickable ? 'card-clickable' : '',
@@ -72,39 +83,62 @@ export function CardView({
       data-defid={definition.id}
       title={definition.ability ? `${definition.ability.name}` : undefined}
     >
-      <div className="card-top">
-        <span className="card-tier" data-tier={definition.tier}>
-          {definition.tier}
-        </span>
-        <SeasonIcon className="card-season-icon" aria-label={definition.season} size={13} />
-        <span className="card-range">R{definition.range}</span>
+      {size === 'battlefield' ? (
+        <div className="card-art-frame">
+          <CardPortrait definition={definition} />
+          <span className="card-gem card-gem-tier" data-tier={definition.tier} aria-label={`${definition.tier} tier`}>
+            {definition.tier[0]}
+          </span>
+          <span className="card-gem card-gem-season" aria-label={definition.season}>
+            <SeasonIcon size={12} />
+          </span>
+          <span className="card-gem card-gem-range" aria-label={`Range ${definition.range}`}>
+            R{definition.range}
+          </span>
+          {instance.defending && <div className="card-ribbon card-ribbon-defending">Defending</div>}
+          {instance.broken && <div className="card-ribbon card-ribbon-broken">Broken</div>}
+        </div>
+      ) : (
+        <div className="card-top">
+          <span className="card-tier" data-tier={definition.tier}>
+            {definition.tier}
+          </span>
+          <SeasonIcon className="card-season-icon" aria-label={definition.season} size={11} />
+          <span className="card-range">R{definition.range}</span>
+        </div>
+      )}
+
+      <div className="card-name-banner">
+        <span className="card-name">{definition.name}</span>
       </div>
-      {size === 'battlefield' && <CardPortrait definition={definition} />}
-      <div className="card-name">{definition.name}</div>
+
       {size === 'bench' && (
         <div className="card-form">{definition.form === 'Titan' ? 'Titan' : definition.season}</div>
       )}
-      <div className="card-stats">
-        <span className="stat stat-attack" aria-label="Attack">
-          <Swords size={13} /> {instance.currentAttack}
+
+      {/* Bench cards are compact reference-only (not clickable, see
+       * BenchStrip) and too short to fit an ability line without
+       * overflowing — the ability name is still reachable via the
+       * button's title tooltip. */}
+      {size === 'battlefield' && definition.ability && <div className="card-ability">{definition.ability.name}</div>}
+
+      <div className="card-stat-row">
+        <span className="card-gem card-gem-attack" aria-label="Attack">
+          <Swords size={size === 'bench' ? 10 : 13} /> {instance.currentAttack}
         </span>
-        <span className="stat stat-shield" aria-label="Shield">
-          <Shield size={13} /> {instance.currentShield}
+        <span className="card-gem card-gem-shield" aria-label="Shield">
+          <Shield size={size === 'bench' ? 10 : 13} /> {instance.currentShield}
         </span>
       </div>
-      {/* Bench cards are compact reference-only (not clickable, see
-       * BenchStrip) and too short to fit a 5th line of text without
-       * overflowing or forcing an ugly mid-word wrap — the ability name is
-       * still reachable via the button's title tooltip. */}
-      {size === 'battlefield' && definition.ability && <div className="card-ability">{definition.ability.name}</div>}
-      {instance.defending && <div className="card-flag card-flag-defending">Defending</div>}
-      {instance.broken && <div className="card-flag card-flag-broken">Broken</div>}
+
+      {size === 'bench' && instance.defending && <div className="card-flag card-flag-defending">Defending</div>}
+      {size === 'bench' && instance.broken && <div className="card-flag card-flag-broken">Broken</div>}
     </button>
   );
 }
 
 /**
- * The art window in the middle of a battlefield card. Falls back to a
+ * The art window filling the top of a battlefield card. Falls back to a
  * dashed placeholder (matching the empty-lane convention already used
  * elsewhere on the board) for any card that doesn't have a portrait yet —
  * deliberately not blocking on 100% roster coverage. The placeholder shows
@@ -118,7 +152,7 @@ function CardPortrait({ definition }: { definition: CardDefinition }) {
     const PlaceholderIcon = SEASON_ICON[definition.season];
     return (
       <div className="card-portrait card-portrait-placeholder" aria-hidden="true">
-        <PlaceholderIcon className="card-portrait-placeholder-icon" size={28} />
+        <PlaceholderIcon className="card-portrait-placeholder-icon" size={32} />
       </div>
     );
   }

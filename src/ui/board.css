@@ -396,36 +396,54 @@ body {
   white-space: nowrap;
 }
 
+/* ------------------------------------------------------------------ */
+/* Cards. Deliberately built to the same visual grammar as a physical    */
+/* trading card (Magic/Pokémon/Hearthstone) rather than a bordered info  */
+/* panel: art dominates and bleeds to the frame's own rounded corners,   */
+/* tier/season/range ride as small gem badges over the art instead of a  */
+/* plain text header row, the name sits in its own banner, and Attack/   */
+/* Shield are bold corner-style gems instead of an inline stat line.     */
+/* That combination — fixed card-shaped frame, dominant art, gemmed      */
+/* stats — is what reads as "a card" rather than "a panel with card      */
+/* data in it." */
+/* ------------------------------------------------------------------ */
+
 .card {
   width: 100%;
-  /* Tall enough for the portrait art window plus the existing text stack
-     (tier/range, name, stats, ability) below it without cramping either —
-     see .card-portrait. */
-  height: 190px;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   background: var(--panel-2);
-  border: 2px solid var(--border);
-  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
   padding: 0.4rem;
   color: var(--text);
   font-family: inherit;
   text-align: left;
   cursor: default;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   /* Any inner text that doesn't fit (e.g. tier/range on a narrow mobile
      card) must clip within the card's own box, never spill into a
      neighboring grid cell — that spillover is what can make a perfectly
      aligned grid *look* misaligned. */
   overflow: hidden;
-  transition: transform 0.1s ease, border-color 0.1s ease;
+  transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+.card-battlefield {
+  /* Card-shaped rather than however-tall-content-happens-to-be: close to
+     the ~5:7 proportions of a physical trading card. min-height (not a
+     hard aspect-ratio) so a long ability name can still push a card
+     taller instead of clipping — the shape is a target, not a cage. */
+  min-height: 178px;
 }
 
 .card-bench {
   width: 92px;
-  height: 96px;
+  min-height: 0;
   font-size: 0.7rem;
   padding: 0.3rem;
+  border-radius: 0.6rem;
   flex-shrink: 0;
 }
 
@@ -434,12 +452,24 @@ body {
   letter-spacing: -0.01em;
 }
 
+.card-bench .card-name-banner {
+  padding: 0.1rem 0.15rem;
+  margin: 0;
+}
+
+.card-bench .card-gem-attack,
+.card-bench .card-gem-shield {
+  padding: 0.05rem 0.3rem;
+  font-size: 0.6rem;
+}
+
 .card-clickable {
   cursor: pointer;
 }
 
 .card-clickable:hover {
   transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
 }
 
 /* Deliberately not styling :disabled directly — a card that's merely not
@@ -454,16 +484,12 @@ body {
 
 .card-selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent) inset;
+  box-shadow: 0 0 0 2px var(--accent), 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .card-targetable {
   border-color: var(--danger);
-  box-shadow: 0 0 8px var(--danger);
-}
-
-.card-defending {
-  border-style: double;
+  box-shadow: 0 0 0 2px var(--danger), 0 0 10px var(--danger);
 }
 
 .card-broken {
@@ -497,6 +523,10 @@ body {
   background-image: linear-gradient(180deg, color-mix(in srgb, var(--neutral) 14%, transparent), transparent 55%);
 }
 
+/* Bench-only header row (tier/season/range as plain text) — bench cards
+   skip the art frame entirely (too small to read a face at 76-92px wide),
+   so there's no art to badge these over; battlefield cards get the gem
+   treatment below instead. */
 .card-top {
   display: flex;
   align-items: center;
@@ -531,21 +561,30 @@ body {
   color: var(--neutral);
 }
 
-/* The art window in the middle of a battlefield card (bench cards skip it
-   entirely — too small to read a face at 76px wide). Source art has an
-   opaque white background baked in rather than transparency, so the frame
-   itself is white too: no seam between the frame and the image edges,
-   same as a photo in a light mat. object-fit: contain guarantees nothing
-   in the art (a horn, an ear) is ever cropped off, at the cost of a
-   little unused margin on off-square images — a better trade than losing
-   part of a hand-picked illustration. */
-.card-portrait {
-  flex-shrink: 0;
-  height: 70px;
-  border-radius: 0.35rem;
+/* The art frame filling the top of a battlefield card — bled to the
+   card's own edges (negative margin cancels .card's padding) with only
+   the top corners rounded, exactly like a card's illustration window.
+   Source art has an opaque white background baked in rather than
+   transparency, so the frame itself is white too: no seam between the
+   frame and the image edges. object-fit: cover deliberately crops to
+   fill the frame edge-to-edge (a real card's art bleeds past its own
+   window) rather than letterboxing — a filled, slightly-cropped frame
+   reads as "a card" far more than a fully-visible image floating in
+   empty space does. */
+.card-art-frame {
+  position: relative;
+  margin: -0.4rem -0.4rem 0;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
+  border-radius: 0.78rem 0.78rem 0 0;
   background: #ffffff;
-  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.card-portrait,
+.card-portrait-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -554,22 +593,162 @@ body {
 .card-portrait img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 /* Cards without art yet: the same dashed-border convention .lane-empty
    already uses for "nothing here" — reads as a placeholder, not a bug. */
 .card-portrait-placeholder {
   background: var(--panel);
-  border-style: dashed;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px dashed var(--border);
+  border-width: 0 0 1px;
 }
 
 .card-portrait-placeholder-icon {
   color: var(--text-dim);
   opacity: 0.5;
+}
+
+/* Small circular/pill badges riding over the art's corners (tier, season,
+   range) — the digital-TCG "cost gem" convention, standing in for the
+   plain text header row a flat info-panel would use instead. */
+.card-gem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.card-gem-tier {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  background: var(--panel-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+.card-gem-tier[data-tier='Silver'] {
+  background: linear-gradient(135deg, #eef0f6, #9aa0b3);
+  color: #1c1e2a;
+  border-color: transparent;
+}
+
+.card-gem-tier[data-tier='Gold'] {
+  background: linear-gradient(135deg, #ffe9ad, var(--accent));
+  color: #241a00;
+  border-color: transparent;
+}
+
+.card-gem-season {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.season-summer .card-gem-season {
+  background: var(--summer);
+  color: #2a0f00;
+  border-color: transparent;
+}
+.season-winter .card-gem-season {
+  background: var(--winter);
+  color: #08131e;
+  border-color: transparent;
+}
+.season-spring .card-gem-season {
+  background: var(--spring);
+  color: #062b0a;
+  border-color: transparent;
+}
+.season-autumn .card-gem-season {
+  background: var(--autumn);
+  color: #2a1600;
+  border-color: transparent;
+}
+.season-neutral .card-gem-season {
+  background: var(--neutral);
+  color: #1c0f33;
+  border-color: transparent;
+}
+
+.card-gem-range {
+  position: absolute;
+  bottom: 0.3rem;
+  right: 0.3rem;
+  height: 1rem;
+  padding: 0 0.32rem;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  background: rgba(10, 11, 16, 0.72);
+  /* A dark pill can otherwise vanish against dark art (e.g. Scorch Boar's
+     lava portrait) — the light ring keeps it legible over any art
+     brightness, not just light ones. */
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+
+/* Status overlays across the bottom of the art — bigger and harder to
+   miss than a small tag ever was, the same way a physical card's status
+   marker (tapped, frozen, silenced) is usually a bold banner across the
+   art, not a caption. */
+.card-ribbon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.15rem 0;
+}
+
+.card-ribbon-defending {
+  background: var(--winter);
+  color: #08131e;
+}
+
+.card-ribbon-broken {
+  background: var(--danger);
+  color: #2a0808;
+}
+
+/* The name plate below the art — a soft season-tinted band rather than
+   bare text sitting in the flow, closer to a card's engraved nameplate. */
+.card-name-banner {
+  text-align: center;
+  border-radius: 0.4rem;
+  padding: 0.2rem 0.3rem 0.05rem;
+}
+
+.season-summer .card-name-banner {
+  background: color-mix(in srgb, var(--summer) 16%, transparent);
+}
+.season-winter .card-name-banner {
+  background: color-mix(in srgb, var(--winter) 16%, transparent);
+}
+.season-spring .card-name-banner {
+  background: color-mix(in srgb, var(--spring) 16%, transparent);
+}
+.season-autumn .card-name-banner {
+  background: color-mix(in srgb, var(--autumn) 16%, transparent);
+}
+.season-neutral .card-name-banner {
+  background: color-mix(in srgb, var(--neutral) 16%, transparent);
 }
 
 .card-name {
@@ -592,38 +771,49 @@ body {
 .card-form {
   font-size: 0.65rem;
   color: var(--text-dim);
+  text-align: center;
 }
 
-.card-stats {
+.card-stat-row {
   display: flex;
-  gap: 0.5rem;
-  font-weight: 600;
+  gap: 0.4rem;
+  justify-content: center;
   margin-top: auto;
+  padding-top: 0.15rem;
 }
 
-.stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
+.card-gem-attack,
+.card-gem-shield {
+  padding: 0.12rem 0.55rem;
+  font-size: 0.78rem;
+  border-radius: 999px;
+  box-shadow: none;
 }
 
-.stat-attack {
+.card-gem-attack {
+  background: color-mix(in srgb, var(--danger) 20%, var(--panel));
   color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
 }
 
-.stat-shield {
+.card-gem-shield {
+  background: color-mix(in srgb, var(--winter) 20%, var(--panel));
   color: var(--winter);
+  border: 1px solid color-mix(in srgb, var(--winter) 45%, transparent);
 }
 
 .card-ability {
   font-size: 0.65rem;
   font-style: italic;
+  text-align: center;
   color: var(--neutral);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* Bench-only compact status tags (bench skips the art frame, so there's
+   no ribbon to overlay them on). */
 .card-flag {
   font-size: 0.6rem;
   border-radius: 0.25rem;
