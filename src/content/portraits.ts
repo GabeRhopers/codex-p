@@ -27,4 +27,8 @@ export const CARD_PORTRAITS: Record<string, string> = {
   ice_piercer: 'ice_piercer.png',
   frostguard: 'frostguard.png',
   snowdrift_scout: 'snowdrift_scout.png',
+  dune_skirmisher: 'dune_skirmisher.png',
+  meadow_runner: 'meadow_runner.png',
+  frost_sentinel: 'frost_sentinel.png',
+  snowbound_guard: 'snowbound_guard.png',
 };
