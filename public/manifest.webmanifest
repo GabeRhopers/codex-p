@@ -1,0 +1,16 @@
+{
+  "name": "Season's Battle",
+  "short_name": "Season's Battle",
+  "description": "A seasonal-creature card battler — build a deck, outmaneuver your opponent across 5 lanes, and push them to zero.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#14161f",
+  "theme_color": "#14161f",
+  "orientation": "any",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
