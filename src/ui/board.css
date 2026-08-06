@@ -454,13 +454,12 @@ body {
 .card-battlefield {
   /* No explicit height here on purpose: every piece of content that
      participates in the flex column's height (.card-art-frame's own
-     aspect-ratio, .card-name-banner, .card-ability) is fixed-size
-     regardless of whether the name wraps to 1 or 2 lines or the ability
-     line is empty (see those rules) — .card-stat-row's gem tokens don't
-     count at all here since they're position: absolute, floated
-     entirely out of flow — so the card's total intrinsic height already
-     comes out identical for every card without needing an outer cap
-     that could clip content that runs slightly long. */
+     aspect-ratio, .card-name-banner, .card-ability, and
+     .card-stat-row's fixed-height gem tokens) is fixed-size regardless
+     of whether the name wraps to 1 or 2 lines or the ability line is
+     empty (see those rules) — so the card's total intrinsic height
+     already comes out identical for every card without needing an
+     outer cap that could clip content that runs slightly long. */
 }
 
 .card-bench {
@@ -608,26 +607,25 @@ body {
    filled, slightly-cropped frame reads as "a card" far more than a
    fully-visible image floating in empty space does.
 
-   No border-radius/overflow here on purpose, unlike the rounded-corner
-   version this replaced: the frame bleeds flush to .card's own edges,
-   so .card's own clip-path (the chamfered corner cut) already clips the
+   No border-radius here on purpose, unlike the rounded-corner version
+   this replaced: the frame bleeds flush to .card's own edges, so
+   .card's own clip-path (the chamfered corner cut) already clips the
    art's top corners along with everything else — a second clip here
-   would be redundant. overflow stays *visible* specifically so
-   .card-stat-row's gem tokens (see below) can hang half outside this
-   frame's bottom edge, overlapping the art/nameplate seam. */
+   would be redundant. */
 .card-art-frame {
   position: relative;
   margin: -0.4rem -0.4rem 0;
   aspect-ratio: 1 / 1;
-  overflow: visible;
+  overflow: hidden;
   /* A flex item's automatic min-height (the default) falls back to a
-     content-based size once overflow isn't hidden, which for a
+     content-based size whenever overflow isn't hidden, which for a
      percentage-sized <img> descendant pulls in the *image's own*
      intrinsic aspect ratio (e.g. a 397x480 portrait source) rather than
      this frame's declared 1:1 — verified via getComputedStyle: a
      non-square source silently grew the frame taller than its own
-     width instead of matching it. min-height: 0 is the standard fix for
-     exactly this flexbox quirk. */
+     width instead of matching it. overflow: hidden already prevents
+     this on its own, but min-height: 0 is the standard, harmless-to-
+     keep belt-and-suspenders fix for this exact flexbox quirk. */
   min-height: 0;
   background: #ffffff;
   flex-shrink: 0;
@@ -748,9 +746,11 @@ body {
   border-color: transparent;
 }
 
-/* Top-center, between the tier and season gems — bottom-left/right are
-   now .card-stat-row's territory (the attack/shield tokens hang there,
-   below the art), so range needed a new home once those moved in. */
+/* Top-center, between the tier and season gems, rather than a bottom
+   corner — keeps this badge (and the tier/season gems either side of
+   it) clustered together at the top of the art, leaving the art's
+   lower half uncluttered above .card-stat-row's fixed strip at the
+   card's bottom edge. */
 .card-gem-range {
   position: absolute;
   top: 0.3rem;
@@ -771,15 +771,12 @@ body {
 /* Status overlays across the bottom of the art — bigger and harder to
    miss than a small tag ever was, the same way a physical card's status
    marker (tapped, frozen, silenced) is usually a bold banner across the
-   art, not a caption. Sits just above the art frame's own bottom edge
-   (not flush with it) specifically to clear .card-stat-row's gem
-   tokens, which overlap that flush-bottom strip from outside the
-   frame — flush would put the ribbon's text directly behind the gems. */
+   art, not a caption. */
 .card-ribbon {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0.95rem;
+  bottom: 0;
   text-align: center;
   font-size: 0.6rem;
   font-weight: 700;
@@ -816,21 +813,17 @@ body {
    uses a smaller font (see .card-bench .card-name) so this size
    wouldn't apply there anyway. box-sizing: border-box (global) means
    min-height includes padding, so this must be recomputed any time the
-   padding below changes — it already went stale once (padding grew to
-   clear the stat gems, this formula didn't, and 2-line names briefly
-   grew taller than 1-line ones again despite the reservation). */
+   padding below changes. */
 .card-battlefield .card-name-banner {
-  min-height: calc(0.85rem + 0.8rem * 1.15 * 2 + 0.05rem);
+  min-height: calc(0.2rem + 0.8rem * 1.15 * 2 + 0.05rem);
   display: flex;
   align-items: center;
   justify-content: center;
   /* Bleed to .card's own edges (cancels its padding, same trick as
      .card-art-frame) so the ribbon's points land right at the card's
-     side edges instead of floating inside the padded column. Extra top
-     padding clears .card-stat-row's gem tokens, which hang down from
-     the art frame above and overlap this banner's top edge. */
+     side edges instead of floating inside the padded column. */
   margin: 0 -0.4rem;
-  padding: 0.85rem 0.6rem 0.05rem;
+  padding: 0.2rem 0.6rem 0.05rem;
   clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
 }
 
@@ -878,9 +871,13 @@ body {
   text-align: center;
 }
 
-/* Attack/Shield "gem tokens." Shared layout only here (icon + number,
-   no visual treatment) — bench and battlefield diverge completely on
-   look, so each defines its own background/border/shadow below. */
+/* Attack/Shield "gem tokens," in a fixed strip along the card's bottom
+   edge (normal flow, margin-top: auto pushes it down) rather than
+   riding the art — easier to find in the same spot on every card than
+   gems that ride the art's own edge. Shared layout only here (icon +
+   number, no visual treatment) — bench and battlefield diverge
+   completely on look, so each defines its own background/border/shadow
+   below. */
 .card-gem-attack,
 .card-gem-shield {
   display: inline-flex;
@@ -891,7 +888,7 @@ body {
   line-height: 1;
 }
 
-.card-bench .card-stat-row {
+.card-stat-row {
   display: flex;
   gap: 0.4rem;
   justify-content: center;
@@ -918,29 +915,10 @@ body {
   border: 1px solid color-mix(in srgb, var(--winter) 45%, transparent);
 }
 
-/* Battlefield: the gems hang half outside .card-art-frame's bottom edge
-   (see its overflow: visible), overlapping the art/nameplate seam —
-   the classic Hearthstone/MTG-Arena "stat gem" placement, and a much
-   stronger CCG cue than a plain stat row sitting in normal flow ever
-   was. Positioned relative to .card-art-frame (their DOM parent, see
-   CardView), not .card, since the frame's own height is a reliable
-   aspect-ratio (not intrinsic/content-driven like .card's total
-   height), so a percentage-free fixed offset places them consistently
-   regardless of how tall the rest of the card's content happens to be. */
-.card-battlefield .card-stat-row {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.95rem;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 0.4rem;
-}
-
 .card-battlefield .card-gem-attack,
 .card-battlefield .card-gem-shield {
-  min-width: 1.9rem;
-  height: 1.9rem;
+  min-width: 1.7rem;
+  height: 1.7rem;
   padding: 0 0.35rem;
   border-radius: 999px;
   font-size: 0.78rem;

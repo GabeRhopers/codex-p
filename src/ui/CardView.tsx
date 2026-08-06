@@ -43,10 +43,9 @@ interface CardViewProps {
  * panel, a rarity-colored border (tier), dominant art bleeding to the
  * frame's own cut top corners, tier/season/range riding as small gem
  * badges over the art, a ribbon-shaped nameplate, and Attack/Shield as
- * beveled gem tokens overlapping the art/nameplate seam at the bottom
- * corners (battlefield only — bench keeps the flat pill row, too small
- * for the overlap to read). That combination is what reads as "a game
- * card" versus a bordered info panel that happens to contain card data.
+ * beveled gem tokens in a fixed strip along the card's bottom edge. That
+ * combination is what reads as "a game card" versus a bordered info
+ * panel that happens to contain card data.
  */
 export function CardView({
   definition,
@@ -99,17 +98,6 @@ export function CardView({
           </span>
           {instance.defending && <div className="card-ribbon card-ribbon-defending">Defending</div>}
           {instance.broken && <div className="card-ribbon card-ribbon-broken">Broken</div>}
-          {/* Overlapping the art/nameplate seam at the bottom corners
-           * (rather than sitting in the normal flow below) is the
-           * classic CCG "stat gem" placement — see .card-stat-row. */}
-          <div className="card-stat-row">
-            <span className="card-gem card-gem-attack" aria-label="Attack">
-              <Swords size={13} /> {instance.currentAttack}
-            </span>
-            <span className="card-gem card-gem-shield" aria-label="Shield">
-              <Shield size={13} /> {instance.currentShield}
-            </span>
-          </div>
         </div>
       ) : (
         <div className="card-top">
@@ -140,16 +128,18 @@ export function CardView({
         <div className="card-ability">{definition.ability ? definition.ability.name : ''}</div>
       )}
 
-      {size === 'bench' && (
-        <div className="card-stat-row">
-          <span className="card-gem card-gem-attack" aria-label="Attack">
-            <Swords size={10} /> {instance.currentAttack}
-          </span>
-          <span className="card-gem card-gem-shield" aria-label="Shield">
-            <Shield size={10} /> {instance.currentShield}
-          </span>
-        </div>
-      )}
+      {/* Attack/Shield sit in normal flow at the very bottom of the
+       * card (below the ability line on battlefield, below the name on
+       * bench) rather than overlapping the art — easier to scan as a
+       * fixed "always here" strip than gems riding the art's edge. */}
+      <div className="card-stat-row">
+        <span className="card-gem card-gem-attack" aria-label="Attack">
+          <Swords size={size === 'bench' ? 10 : 13} /> {instance.currentAttack}
+        </span>
+        <span className="card-gem card-gem-shield" aria-label="Shield">
+          <Shield size={size === 'bench' ? 10 : 13} /> {instance.currentShield}
+        </span>
+      </div>
 
       {size === 'bench' && instance.defending && <div className="card-flag card-flag-defending">Defending</div>}
       {size === 'bench' && instance.broken && <div className="card-flag card-flag-broken">Broken</div>}
