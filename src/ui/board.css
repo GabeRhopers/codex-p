@@ -14,6 +14,30 @@
   --spring: #6bd97a;
   --autumn: #c98a3a;
   --neutral: #a98fd6;
+
+  /* "-ink" = the same accent hue, but guaranteed WCAG AA-legible as
+     foreground text/icon/border against this theme's own backgrounds.
+     The base tokens above (--accent, --danger, etc.) were picked to pop
+     against a dark background and are pastel/vivid enough that every
+     one of them fails contrast (as low as 1.1:1 for --ok) the moment
+     they're used as *text* on a light background — verified by
+     computing WCAG contrast ratios for all 8 tokens against every
+     light-theme background token, not just spot-checked. Dark theme
+     already passes for all of them (that's what they were tuned for),
+     so these default to plain aliases here and only get overridden
+     below, in the light-theme blocks, with darkened variants. Use
+     these (not the base token) for `color`/`border-color` — the base
+     token is still correct for `background` (which pairs it with its
+     own explicit contrasting foreground already) and for decorative
+     box-shadow/filter glows, where a muted color would look wrong. */
+  --accent-ink: var(--accent);
+  --danger-ink: var(--danger);
+  --ok-ink: var(--ok);
+  --neutral-ink: var(--neutral);
+  --summer-ink: var(--summer);
+  --winter-ink: var(--winter);
+  --spring-ink: var(--spring);
+  --autumn-ink: var(--autumn);
 }
 
 @media (prefers-color-scheme: light) {
@@ -24,6 +48,27 @@
     --text: #1c1e2a;
     --text-dim: #5a5f77;
     --border: #d3d6e6;
+
+    /* Each darkened just enough to clear ~4.7:1 (a small safety margin
+       over the 4.5:1 AA minimum) against --panel-2 (#eceef7) — the
+       *actual* worst case of the three light-theme background tokens,
+       not --panel (#ffffff), which is what a first pass at this
+       wrongly assumed was "the lightest, so the hardest to contrast
+       against" and calibrated against exclusively. It isn't: --bg and
+       --panel-2 are both slightly *darker* than pure white, so a color
+       tuned only against white came out narrowly failing (as low as
+       3.91:1) against the other two. Recomputed against the real
+       worst case; verified afterward that every one of these now
+       clears 4.5:1 against all three light-theme background tokens,
+       not just one. */
+    --accent-ink: #8a6000;
+    --danger-ink: #d10000;
+    --ok-ink: #007a39;
+    --neutral-ink: #7a51c3;
+    --summer-ink: #c42d00;
+    --winter-ink: #0069bf;
+    --spring-ink: #1c7628;
+    --autumn-ink: #8e5f24;
   }
 }
 
@@ -38,6 +83,14 @@
   --text: #e8e8f0;
   --text-dim: #9a9fb5;
   --border: #383d55;
+  --accent-ink: var(--accent);
+  --danger-ink: var(--danger);
+  --ok-ink: var(--ok);
+  --neutral-ink: var(--neutral);
+  --summer-ink: var(--summer);
+  --winter-ink: var(--winter);
+  --spring-ink: var(--spring);
+  --autumn-ink: var(--autumn);
 }
 
 :root[data-theme='light'] {
@@ -47,6 +100,14 @@
   --text: #1c1e2a;
   --text-dim: #5a5f77;
   --border: #d3d6e6;
+  --accent-ink: #8a6000;
+  --danger-ink: #d10000;
+  --ok-ink: #007a39;
+  --neutral-ink: #7a51c3;
+  --summer-ink: #c42d00;
+  --winter-ink: #0069bf;
+  --spring-ink: #1c7628;
+  --autumn-ink: #8e5f24;
 }
 
 * {
@@ -173,11 +234,11 @@ body {
 }
 
 .score-you {
-  color: var(--ok);
+  color: var(--ok-ink);
 }
 
 .score-opponent {
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .turn-info {
@@ -186,7 +247,7 @@ body {
 }
 
 .hint {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* ------------------------------------------------------------------ */
@@ -209,7 +270,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* Positioning context for the scroll-affordance fade below — it overlays
@@ -221,7 +282,7 @@ body {
 
 .arena-scroll {
   background: var(--panel);
-  border: 2px solid var(--accent);
+  border: 2px solid var(--accent-ink);
   border-radius: 0.75rem;
   padding: 0.75rem;
   overflow-x: auto;
@@ -364,10 +425,10 @@ body {
 
 .lane-empty-targetable {
   cursor: pointer;
-  border-color: var(--danger);
+  border-color: var(--danger-ink);
   border-style: solid;
   box-shadow: 0 0 8px var(--danger);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .bench-section {
@@ -523,17 +584,17 @@ body {
    clip-path and would draw a rectangular halo around the chamfered
    shape. See the clip-path comment on .card for the full reasoning. */
 .card-selected {
-  border-color: var(--accent);
+  border-color: var(--accent-ink);
   filter: drop-shadow(0 0 0 2px var(--accent)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
 }
 
 .card-targetable {
-  border-color: var(--danger);
+  border-color: var(--danger-ink);
   filter: drop-shadow(0 0 0 2px var(--danger)) drop-shadow(0 0 8px var(--danger));
 }
 
 .card-broken {
-  border-color: var(--danger);
+  border-color: var(--danger-ink);
 }
 
 /* Season no longer owns the border (that's rarity's job now — see the
@@ -573,7 +634,7 @@ body {
 }
 
 .card-tier[data-tier='Gold'] {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* Tinted to match the card's own season stripe so the icon reinforces the
@@ -582,19 +643,19 @@ body {
   flex-shrink: 0;
 }
 .season-summer .card-season-icon {
-  color: var(--summer);
+  color: var(--summer-ink);
 }
 .season-winter .card-season-icon {
-  color: var(--winter);
+  color: var(--winter-ink);
 }
 .season-spring .card-season-icon {
-  color: var(--spring);
+  color: var(--spring-ink);
 }
 .season-autumn .card-season-icon {
-  color: var(--autumn);
+  color: var(--autumn-ink);
 }
 .season-neutral .card-season-icon {
-  color: var(--neutral);
+  color: var(--neutral-ink);
 }
 
 /* The art frame filling the top of a battlefield card — bled to the
@@ -905,13 +966,13 @@ body {
 
 .card-bench .card-gem-attack {
   background: color-mix(in srgb, var(--danger) 20%, var(--panel));
-  color: var(--danger);
+  color: var(--danger-ink);
   border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
 }
 
 .card-bench .card-gem-shield {
   background: color-mix(in srgb, var(--winter) 20%, var(--panel));
-  color: var(--winter);
+  color: var(--winter-ink);
   border: 1px solid color-mix(in srgb, var(--winter) 45%, transparent);
 }
 
@@ -950,7 +1011,7 @@ body {
   font-size: 0.65rem;
   font-style: italic;
   text-align: center;
-  color: var(--neutral);
+  color: var(--neutral-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1024,17 +1085,17 @@ body {
 }
 
 .btn:hover {
-  border-color: var(--accent);
+  border-color: var(--accent-ink);
 }
 
 .btn-ability {
-  border-color: var(--neutral);
-  color: var(--neutral);
+  border-color: var(--neutral-ink);
+  color: var(--neutral-ink);
 }
 
 .btn-cancel {
-  border-color: var(--danger);
-  color: var(--danger);
+  border-color: var(--danger-ink);
+  color: var(--danger-ink);
 }
 
 .btn-end-turn {
@@ -1043,6 +1104,12 @@ body {
 
 .btn-primary {
   background: var(--accent);
+  /* Deliberately the base token, not -ink: the border matches this
+     rule's own solid accent fill for a seamless edge, not a
+     lower-contrast text/border-on-panel case like the ones -ink
+     exists for — the text sitting on this fill is #241a00 (a fixed
+     dark ink chosen for that pairing specifically), not var(--accent)
+     itself, so this rule was never part of the light-theme bug. */
   border-color: var(--accent);
   color: #241a00;
   font-weight: 700;
@@ -1065,7 +1132,7 @@ body {
 .board-gameover h1 {
   font-family: 'Cinzel', serif;
   font-size: 2rem;
-  color: var(--accent);
+  color: var(--accent-ink);
   margin: 0;
 }
 
@@ -1073,7 +1140,7 @@ body {
    neutral gold heading above) — a real loss shouldn't look identical to a
    win. */
 .board-gameover-loss h1 {
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .board-gameover-score {
@@ -1159,7 +1226,7 @@ body {
 .screen-title {
   font-family: 'Cinzel', serif;
   font-size: 2.4rem;
-  color: var(--accent);
+  color: var(--accent-ink);
   margin: 0;
 }
 
@@ -1202,7 +1269,7 @@ body {
 }
 
 .deck-choice-card:hover {
-  border-color: var(--accent);
+  border-color: var(--accent-ink);
   transform: translateY(-2px);
 }
 
@@ -1259,7 +1326,7 @@ body {
 .deck-builder-title {
   font-family: 'Cinzel', serif;
   font-size: 1.6rem;
-  color: var(--accent);
+  color: var(--accent-ink);
   margin: 0 0 0.35rem;
 }
 
@@ -1301,6 +1368,7 @@ body {
 
 .deck-builder-pick-badge-starter {
   background: var(--accent);
+  /* Base token, not -ink — same reasoning as .btn-primary above. */
   border-color: var(--accent);
   color: #241a00; /* matches .btn-primary's dark-on-gold text */
 }
@@ -1335,12 +1403,12 @@ body {
 }
 
 .deck-builder-stat-ok {
-  color: var(--ok);
+  color: var(--ok-ink);
   font-weight: 600;
 }
 
 .deck-builder-stat-bad {
-  color: var(--danger);
+  color: var(--danger-ink);
   font-weight: 600;
 }
 
@@ -1416,7 +1484,7 @@ body {
 .guide-title {
   font-family: 'Cinzel', serif;
   font-size: 1.3rem;
-  color: var(--accent);
+  color: var(--accent-ink);
   margin: 0;
 }
 
@@ -1523,7 +1591,7 @@ body {
   font-family: 'Cinzel', serif;
   font-weight: 700;
   font-size: 0.9rem;
-  color: var(--accent);
+  color: var(--accent-ink);
   display: block;
   margin-bottom: 0.3rem;
 }
@@ -1555,11 +1623,11 @@ body {
 }
 
 .guide-alliance-vanguard {
-  border-left-color: var(--summer);
+  border-left-color: var(--summer-ink);
 }
 
 .guide-alliance-warden {
-  border-left-color: var(--winter);
+  border-left-color: var(--winter-ink);
 }
 
 .guide-alliance-card h4 {

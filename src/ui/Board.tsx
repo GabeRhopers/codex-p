@@ -529,7 +529,12 @@ function renderRow({ G, playerID, lanes, gridRow, side, selectedLane, targetable
           // Range 1 attacker whose sole geometrically valid target happens
           // to be empty would have no way to complete (or deliberately
           // waste) that attack through the UI at all.
-          <button type="button" className="lane-empty lane-empty-targetable" onClick={() => onClick(targetLane)}>
+          <button
+            type="button"
+            className="lane-empty lane-empty-targetable"
+            onClick={() => onClick(targetLane)}
+            aria-label={`Empty, lane ${targetLane + 1} — attack here`}
+          >
             empty
           </button>
         ) : (
