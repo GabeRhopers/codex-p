@@ -1,0 +1,53 @@
+name: Card Balance Report
+
+# The balance simulator (tests/balance/balanceSim.report.ts) is fully
+# deterministic — a seeded RNG drives ~150+2 bot-vs-bot matches, so its
+# output only ever changes when something that affects match outcomes
+# changes. That's why this triggers on relevant `paths`, not a calendar
+# schedule: a cron would just re-print an identical report every time
+# until content actually changed, which is pure noise. It's also
+# deliberately its own workflow rather than a step tacked onto
+# deploy-pages.yml's `verify` job — this report has no pass/fail
+# threshold (see the sim's own docstring: "flags candidates, it does not
+# hand down verdicts"), so it must never be able to block a deploy the
+# way a real test failure does.
+on:
+  push:
+    branches: [claude/seasons-battle-capacity-hp09cp]
+    paths:
+      - 'src/content/cards.ts'
+      - 'src/content/decks.ts'
+      - 'src/content/deckBuilder.ts'
+      - 'src/game/**'
+      - 'tests/balance/**'
+  workflow_dispatch:
+
+jobs:
+  balance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Captured to a file (not just left in the step's own log) so it
+      # can be written into the run's job summary below — the summary is
+      # what actually makes this visible without digging into raw logs,
+      # which is the whole point of automating a report nobody was
+      # reliably remembering to run by hand.
+      # The default reporter swallows console.log output entirely (verified
+      # locally: `npm run balance` alone prints only the pass/fail summary,
+      # none of the actual report) — verbose is the one that inlines it.
+      - run: npm run balance -- --reporter=verbose 2>&1 | tee balance-output.txt
+      - name: Publish report to job summary
+        if: always()
+        run: |
+          {
+            echo "## Card Balance Report"
+            echo
+            echo '```'
+            cat balance-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
