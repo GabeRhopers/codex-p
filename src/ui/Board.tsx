@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CSSProperties, ReactNode, RefObject } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
 import { Volume2, VolumeX } from 'lucide-react';
 import { CARD_DEFINITIONS } from '../content/cards';
@@ -140,28 +140,6 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
     prevSoundStateRef.current = { G, gameover: !!ctx.gameover };
   }, [G, ctx.gameover]);
 
-  // Computed here (rather than after the `if (winner)` early return below)
-  // so the scrollIntoView effect that depends on them stays an unconditional
-  // hook call — React requires every hook to run in the same order on every
-  // render, and an early return before a hook violates that.
-  const selectedLane = selection.mode !== 'idle' ? selection.lane : null;
-  const selectedInstanceId = selectedLane !== null ? G.players[you].lanes[selectedLane] : null;
-
-  // .action-panel stays in plain normal flow (see board.css for why both
-  // position: sticky and position: fixed were tried and disproved by real
-  // overlap testing) — so instead of trying to keep it permanently pinned,
-  // scroll it into view the instant it appears. That's what actually
-  // answers the player complaint ("the action bar sometimes is not
-  // visible"): whichever of the two mutually-exclusive .action-panel
-  // branches below just mounted (ActionPanel itself, or the
-  // targeting-prompt panel — only one is ever mounted at a time, sharing
-  // this one ref) gets scrolled on-screen on every relevant transition
-  // (new card selected, entering/leaving targeting, cancel).
-  const actionPanelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    actionPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [selection.mode, selectedInstanceId]);
-
   function selectLane(lane: number) {
     const instanceId = G.players[you].lanes[lane];
     if (!instanceId) return;
@@ -232,6 +210,8 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
     );
   }
 
+  const selectedLane = selection.mode !== 'idle' ? selection.lane : null;
+  const selectedInstanceId = selectedLane !== null ? G.players[you].lanes[selectedLane] : null;
   const selectedInstance = selectedInstanceId ? G.cardInstances[selectedInstanceId] : null;
   const selectedDef = selectedInstance ? CARD_DEFINITIONS[selectedInstance.defId] : null;
 
@@ -327,12 +307,11 @@ export function Board({ G, ctx, moves, events, playerDeckNames, onPlayAgain, onS
           onMove={(dir) => fireMove(selectedLane!, dir)}
           onAbility={() => (selectedDef.ability?.requiresTarget ? setSelection({ mode: 'awaitingAbilityTarget', lane: selectedLane! }) : fireAbility(selectedLane!))}
           onCancel={resetSelection}
-          panelRef={actionPanelRef}
         />
       )}
 
       {(selection.mode === 'awaitingRange1Target' || selection.mode === 'awaitingAbilityTarget') && (
-        <div className="action-panel" ref={actionPanelRef}>
+        <div className="action-panel">
           <p>{selection.mode === 'awaitingRange1Target' ? 'Choose a highlighted lane to attack.' : 'Choose a highlighted enemy card to target.'}</p>
           <button type="button" className="btn btn-cancel" onClick={resetSelection}>
             Cancel
@@ -598,10 +577,9 @@ interface ActionPanelProps {
   onMove: (direction: 'left' | 'right') => void;
   onAbility: () => void;
   onCancel: () => void;
-  panelRef: RefObject<HTMLDivElement | null>;
 }
 
-function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefense, onLeaveDefense, onMove, onAbility, onCancel, panelRef }: ActionPanelProps) {
+function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefense, onLeaveDefense, onMove, onAbility, onCancel }: ActionPanelProps) {
   // The single source of truth for what this card may do — shared with the
   // bot (src/game/bot.ts) so button visibility here and the bot's decision
   // logic can never drift apart the way two independently-authored copies
@@ -611,7 +589,7 @@ function ActionPanel({ lane, instance, definition, ctx, G, onAttack, onEnterDefe
   if (!legal) return null; // shouldn't happen — ActionPanel only renders for a selected, actable card
 
   return (
-    <div className="action-panel" ref={panelRef}>
+    <div className="action-panel">
       <p className="action-panel-title">{definition.name} — choose an action</p>
       <div className="action-buttons">
         {legal.attack?.range === 1 && (

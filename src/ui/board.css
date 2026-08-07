@@ -1048,32 +1048,48 @@ body {
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
-  /* Two viewport-pinned approaches were tried and disproved here by real
-     getBoundingClientRect() checks, not just eyeballing:
-     - position: sticky pins to the viewport edge immediately on render,
-       before any scrolling, whenever the panel's natural flow position
-       would sit below the fold — that pinned spot can coincide with
-       wherever bench/battlefield cards already sit on-screen, overlapping
-       them.
-     - position: fixed + a matching padding-bottom reservation on .board
-       looked like the fix, but fails the exact same way at the top
-       (unscrolled) position: the reserved padding is trailing space added
-       *after* the real content, so it only creates clearance once the user
-       has actually scrolled into it. On a board whose natural height is
-       close to the viewport height, the real content (not the padding)
-       already occupies the bottom of the unscrolled viewport, which is
-       exactly where the fixed bar sits — so it overlaps regardless of how
-       much padding exists further down the page.
-     Both failure modes are inherent to any bottom-pinned overlay when
-     content height is close to viewport height — there's no CSS-only fix
-     without also constraining the scrollable region's height. The robust
-     fix instead: leave the panel in plain normal flow (so it can never
-     overlap anything — it just occupies its own space like everything
-     else), and have Board.tsx scrollIntoView() it whenever it mounts. That
-     directly answers the actual complaint ("the action bar sometimes is
-     not visible") by bringing it on-screen the moment it appears, instead
-     of trying to keep it permanently pinned. */
-  scroll-margin-bottom: 1rem;
+  /* Three approaches were tried for keeping this reliably visible, in
+     order:
+     1. position: sticky — pins to the viewport edge immediately on
+        render, before any scrolling, whenever the panel's natural flow
+        position would sit below the fold. Disproved by real
+        getBoundingClientRect() checks: that pinned spot can coincide with
+        wherever bench/battlefield cards already sit on-screen, overlapping
+        them.
+     2. position: fixed + a matching padding-bottom reservation on .board —
+        looked like the fix, but failed the same way at the unscrolled top
+        of the page: the reserved padding is trailing space added *after*
+        the real content, so it only creates clearance once the user has
+        actually scrolled into it.
+     3. Plain normal flow + Board.tsx scrollIntoView()ing it on mount —
+        never overlapped anything, but felt worse in practice: every card
+        selection yanked the page into a scroll animation, which read as
+        janky rather than helpful (the actual next player complaint).
+     The real fix: stop trying to avoid overlapping content and make that
+     the deliberate design instead. This is a floating action bar, pinned
+     to the bottom of the viewport at a high z-index, on top of whatever
+     happens to be underneath — the same pattern as a mobile app's bottom
+     toolbar. No JS, no scroll tricks, and nothing to get wrong across
+     viewport sizes: it's just always exactly where the player expects it.
+     env(safe-area-inset-bottom) keeps it clear of iOS's home-indicator
+     gesture area. */
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(0.6rem, env(safe-area-inset-bottom));
+  width: calc(100% - 2rem);
+  max-width: 960px;
+  /* Below .guide-overlay's z-index: 20 — How to Play can open mid-match
+     (see its own comment below) and must cover this, not sit under it. */
+  z-index: 10;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 480px) {
+  .action-panel {
+    width: calc(100% - 1rem);
+    padding: 0.6rem 0.75rem;
+  }
 }
 
 .action-panel-title {
@@ -1391,11 +1407,11 @@ body {
 }
 
 .deck-builder-summary {
-  /* Unlike .action-panel, this bar is always on screen while picking from
-     22 cards, so staying reachable without scrolling all the way down is
-     worth keeping sticky for — but sticky alone just overlaps whatever's
-     behind it once it engages. .deck-builder-grid's bottom padding below
-     reserves the room this needs so it never covers a card. */
+  /* Sticky (not fixed, like .action-panel) because this bar needs to stay
+     reachable without scrolling all the way down through 22 cards, but
+     unlike .action-panel it shouldn't float over the grid it summarizes —
+     .deck-builder-grid's bottom padding below reserves the room this needs
+     so it never covers a card. */
   position: sticky;
   bottom: 0.5rem;
   z-index: 5;
@@ -1710,19 +1726,32 @@ body {
 /* the file later. */
 /* ------------------------------------------------------------------ */
 @media (max-width: 480px) {
-  /* The previous sizing here (54px label + 5×96px lanes ≈ 534px of grid
-     content, plus padding/border) was wider than the ~333px actually
-     available inside .arena-scroll on a 375-414px phone. That's what cut
-     cards off mid-content instead of at a clean lane boundary. This sizing
-     is chosen to keep ~3.5-4 lanes comfortably legible at once — the 5th
-     is a swipe away, signaled by .arena-scroll-fade and guaranteed to
-     settle on a clean edge by scroll-snap-type: x mandatory above. */
+  /* Sized against real measurements (Playwright clientWidth/scrollWidth at
+     320/360/375/390px viewports), not just an estimate — the previous
+     32px + 5×80px sizing left lane 4 only ~65% visible at 360px (a common
+     Android width) and ~84% at 375px, both reading as a card cut off
+     mid-content rather than a clean "swipe for more" cue. At 28px +
+     5×72px, lane 4 is ~89% visible at 360px and effectively fully visible
+     (only a sliver of lane 5 peeking in) at 375px and up — full lanes 1-4
+     show cleanly on virtually every modern phone. Only genuinely narrow
+     (~320px) devices still show a partial lane 4, and even there it's a
+     smaller, more legible cut. The 5th lane is always a swipe away,
+     signaled by .arena-scroll-fade and guaranteed to settle on a clean
+     lane boundary by scroll-snap-type: x mandatory above. */
   .arena-scroll {
     padding: 0.5rem;
   }
 
+  /* Matches .arena-scroll's own padding above so the fade hugs the same
+     top/bottom edges as the cards it's fading — the unconditional rule's
+     0.75rem inset is tuned for desktop's 0.75rem arena-scroll padding. */
+  .arena-scroll-fade {
+    top: 0.5rem;
+    bottom: 0.5rem;
+  }
+
   .arena-grid {
-    grid-template-columns: 32px repeat(5, 80px);
+    grid-template-columns: 28px repeat(5, 72px);
     column-gap: 0.25rem;
     row-gap: 0.4rem;
   }
@@ -1753,7 +1782,7 @@ body {
   }
 
   /* Cinzel's display-serif metrics are noticeably wider per character than
-     Inter's — fine at desktop card widths, but on an 80px mobile arena
+     Inter's — fine at desktop card widths, but on a 72px mobile arena
      lane it's what pushes ordinary names like "Skirmisher" into a
      mid-word ellipsis. Inter buys back that room without shrinking the
      type size further, which matters more here than the carved-title look
