@@ -1048,15 +1048,32 @@ body {
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
-  /* Deliberately NOT position: sticky. It only ever renders right after a
-     card is selected — exactly where the player is already looking — and
-     stickying it to the viewport bottom used to overlap the very card
-     stats and bench row it needs to sit below (confirmed via real
-     getBoundingClientRect overlap, not just a screenshot artifact): with
-     nothing reserving space for it, "stuck" meant "on top of," not
-     "below." Rendering in normal flow guarantees it never covers
-     anything, at the cost of an occasional scroll on very tall boards. */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  /* Two viewport-pinned approaches were tried and disproved here by real
+     getBoundingClientRect() checks, not just eyeballing:
+     - position: sticky pins to the viewport edge immediately on render,
+       before any scrolling, whenever the panel's natural flow position
+       would sit below the fold — that pinned spot can coincide with
+       wherever bench/battlefield cards already sit on-screen, overlapping
+       them.
+     - position: fixed + a matching padding-bottom reservation on .board
+       looked like the fix, but fails the exact same way at the top
+       (unscrolled) position: the reserved padding is trailing space added
+       *after* the real content, so it only creates clearance once the user
+       has actually scrolled into it. On a board whose natural height is
+       close to the viewport height, the real content (not the padding)
+       already occupies the bottom of the unscrolled viewport, which is
+       exactly where the fixed bar sits — so it overlaps regardless of how
+       much padding exists further down the page.
+     Both failure modes are inherent to any bottom-pinned overlay when
+     content height is close to viewport height — there's no CSS-only fix
+     without also constraining the scrollable region's height. The robust
+     fix instead: leave the panel in plain normal flow (so it can never
+     overlap anything — it just occupies its own space like everything
+     else), and have Board.tsx scrollIntoView() it whenever it mounts. That
+     directly answers the actual complaint ("the action bar sometimes is
+     not visible") by bringing it on-screen the moment it appears, instead
+     of trying to keep it permanently pinned. */
+  scroll-margin-bottom: 1rem;
 }
 
 .action-panel-title {
