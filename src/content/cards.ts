@@ -63,12 +63,17 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
     range: 1,
     tier: 'Common',
   },
+  // Attack 2, not 3 — see BALANCE_FORMULA.md. At Attack 3 this was the
+  // roster's best card by a wide margin (both the Base-Combat-Power formula
+  // and the real balance simulator agreed: 63.5% win rate, highest of any
+  // card) despite being a vanilla Common with no ability at all. Attack 2
+  // lands it with the Ash Owl / Dawn Hare / Snow Elk / Stone Husky cluster.
   solar_lancer: {
     id: 'solar_lancer',
     name: 'Solar Falcon',
     season: 'Summer',
     form: 'Normal',
-    attack: 3,
+    attack: 2,
     shield: 3,
     range: 2,
     tier: 'Common',
@@ -140,13 +145,22 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
     range: 1,
     tier: 'Common',
   },
+  // Attack 2 / Shield 4, not 1 / 3 — see BALANCE_FORMULA.md. At Attack 1
+  // this Silver sat at parity with a weak vanilla Common (43.8% win rate)
+  // despite spending one of a deck's 3 special-ability slots on Feint.
+  // Neither the Attack bump alone nor a bigger Feint (+3, see the ability's
+  // own comment) moved it out of last place on their own (still 40-44%
+  // across several re-simulations, largest run 44.1% at n=524) — Feint's
+  // own restriction (not usable while defending) leaves this card more
+  // exposed than Ward's user (Blizzard Wolf), so it needs more raw
+  // durability to compensate, on top of Feint actually being worth using.
   trickster: {
     id: 'trickster',
     name: 'Shadow Fox',
     season: 'Neutral',
     form: 'Normal',
-    attack: 1,
-    shield: 3,
+    attack: 2,
+    shield: 4,
     range: 1,
     tier: 'Silver',
     ability: {
@@ -161,8 +175,18 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
       // is built to avoid needing. Before this, the two were literally
       // identical (+1 Shield, usable while defending, no target) despite
       // shipping in the same starter deck.
+      //
+      // +3, not +2 — see BALANCE_FORMULA.md. Bumping Shadow Fox's Attack
+      // didn't help at all (still worst-or-tied-worst in the roster across
+      // re-simulations), which pointed at Feint's own restriction — usable
+      // only while exposed, unlike Ward — costing it more in practice than
+      // its bigger nominal number bought back. Rather than remove that
+      // restriction (which would undo the deliberate Ward/Feint split
+      // above), this raises the payoff for taking the risk instead, so the
+      // two abilities stay mechanically distinct rather than becoming the
+      // same shape at different sizes.
       effect: ({ G, casterInstanceId }) => {
-        restoreShield(G.cardInstances[casterInstanceId], 2, CARD_DEFINITIONS);
+        restoreShield(G.cardInstances[casterInstanceId], 3, CARD_DEFINITIONS);
       },
     },
   },
@@ -254,13 +278,22 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
       },
     },
   },
+  // Shield 2, not 3 — see BALANCE_FORMULA.md. A 150-match sim run initially
+  // read this as roughly balanced (51-55%, close to Scorch Boar's near-
+  // identical stat line), but a 600-match run at the same seed narrowed
+  // the margin of error enough to show it's a real, consistent
+  // overperformer (55.5%) — the earlier small-sample reading was noise, not
+  // signal. Trimming Shield by 1 brings its Base Combat Power back in line
+  // with the Common average without touching Numbing Frost's own math
+  // (already priced identically to Scorch's — see the ability's own
+  // comment).
   blizzardcaller: {
     id: 'blizzardcaller',
     name: 'Tundra Wolverine',
     season: 'Winter',
     form: 'Normal',
     attack: 2,
-    shield: 3,
+    shield: 2,
     range: 2,
     tier: 'Gold',
     ability: {
@@ -298,20 +331,30 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
     range: 1,
     tier: 'Common',
   },
+  // Attack 2 / Shield 3, not 1 / 2, and Mesmerize no longer costs both
+  // moves — see BALANCE_FORMULA.md. At 1/2 this Gold had the *worst* raw
+  // stats of any card in the roster, Commons included, and it was the
+  // roster's worst performer overall (41.4% win rate) despite Mesmerize's
+  // imposing -4 Shield hit. A stat bump alone (to A2/S4, matching Dune
+  // Jackal/Bloom Fawn's line) only moved it to 43.8%; dropping
+  // costsBothMoves on top of that was the real fix, but overshot hard
+  // (59.4%, the roster's *best* card) — forfeiting the whole turn was
+  // costing it far more than expected. Shield 3 (down from the 4 tried
+  // alongside the costsBothMoves fix) trims it back down once a larger
+  // 600-match run confirmed 4 still ran a little hot (57.2%).
   mesmerist: {
     id: 'mesmerist',
     name: 'Wild Cobra',
     season: 'Neutral',
     form: 'Normal',
-    attack: 1,
-    shield: 2,
+    attack: 2,
+    shield: 3,
     range: 1,
     tier: 'Gold',
     ability: {
       id: 'mesmerist_mesmerize',
       name: 'Mesmerize',
       requiresTarget: true,
-      costsBothMoves: true,
       effect: ({ G, targetInstanceId }) => {
         // §21 — Mind Control's exact effect is left to the card's own text;
         // this MVP interpretation is a heavy Shield hit (not a literal
@@ -319,10 +362,18 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
         // and Broken unconditionally, bypassing Defense Mode's damage cap
         // entirely — the only thing in the game that could do that. Now it
         // goes through reduceShield like any other Shield-damaging effect,
-        // so a defending target is still capped at 1 (§18) and only the
-        // toughest cards in the roster (Shield 5-6) survive it at all.
+        // so a defending target is still capped at 1 (§18).
+        //
+        // -3, not -4 — see BALANCE_FORMULA.md. Dropping costsBothMoves (see
+        // above) was re-simulated together with the -4 magnitude and
+        // overshot hard: Wild Cobra went from the roster's worst card
+        // (41.4%) to its best (59.4%) in one step, because removing the
+        // "no attack, no defense" tax was worth far more alone than
+        // expected. -3 is still a real, roster-topping hit (only Stone
+        // Husky's Shield 6 comfortably survives it) without also being
+        // affordable every single turn at full force.
         if (!targetInstanceId) return;
-        reduceShield(G.cardInstances[targetInstanceId], 4);
+        reduceShield(G.cardInstances[targetInstanceId], 3);
       },
     },
   },
@@ -339,12 +390,16 @@ export const CARD_DEFINITIONS: CardDefinitionRegistry = {
   // The roster's first Autumn card — fills Warden's Alliance's slot
   // vacated by removing glacier_warden for Normal Mode (see the
   // file-level comment).
+  //
+  // Attack 2, not 1 — see BALANCE_FORMULA.md. At Attack 1 this vanilla
+  // Common sat below the Common average with nothing (no ability) to show
+  // for it (43.3% win rate, near the bottom of the roster).
   bramble_reaper: {
     id: 'bramble_reaper',
     name: 'Bramble Lynx',
     season: 'Autumn',
     form: 'Normal',
-    attack: 1,
+    attack: 2,
     shield: 4,
     range: 1,
     tier: 'Common',

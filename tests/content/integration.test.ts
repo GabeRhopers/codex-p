@@ -95,8 +95,8 @@ describe('Real content integration', () => {
       {
         // ember_striker (Attack 4) exists purely so Numbing Frost's -2 has
         // room to show up distinctly from Scorch's -1 — Shadow Fox's own
-        // Attack (1) would floor either way (attackFloor = 1) and prove
-        // nothing.
+        // Attack (2) would floor either way (attackFloor = 1: 2-1 and 2-2
+        // both bottom out at 1) and prove nothing.
         '0': { deckDefIds: ['trickster', 'ember_striker'], startingBattlefieldDefIds: ['trickster', 'ember_striker'] },
         '1': { deckDefIds: ['blizzardcaller', 'solar_lancer'], startingBattlefieldDefIds: ['blizzardcaller', 'solar_lancer'] },
       },
@@ -110,7 +110,7 @@ describe('Real content integration', () => {
     expect(getG(client).cardInstances['0:trickster'].defending).toBe(true);
     client.moves.activateAbility({ lane: 0 }); // Feint, while defending: must be rejected
     expect(getG(client).turnState.movesUsed).toBe(1); // still just the enterDefense move
-    expect(getG(client).cardInstances['0:trickster'].currentShield).toBe(3); // unchanged
+    expect(getG(client).cardInstances['0:trickster'].currentShield).toBe(4); // unchanged (printed max)
 
     advanceToPlayerTurn(client, '1');
     // Numbing Frost (Tundra Wolverine) now hits for 2, not Scorch's 1.
@@ -124,7 +124,7 @@ describe('Real content integration', () => {
   // to set a target's Shield straight to 0 and Broken unconditionally,
   // regardless of the target's own Shield or Defense Mode status — the
   // only thing in the game that could bypass Defense Mode's damage cap.
-  // It's now a heavy (-4) but ordinary Shield hit via reduceShield, so it
+  // It's now a heavy (-3) but ordinary Shield hit via reduceShield, so it
   // no longer auto-destroys-in-waiting the toughest cards in the roster,
   // and Defense Mode still caps it at 1 like any other hit (§18).
   it('Mesmerize is a heavy Shield hit, not an unconditional wipe, and still respects Defense Mode', () => {
@@ -139,10 +139,14 @@ describe('Real content integration', () => {
     // Turn 1 (player 0): Mesmerize against Stone Husky, the roster's
     // tankiest card (Shield 6). The old behavior would have zeroed and
     // Broken it outright; it should now just take a heavy, survivable hit.
+    // Mesmerize costs 1 move like every other ability (see BALANCE_FORMULA.md
+    // for why costsBothMoves was dropped), so this turn is ended explicitly
+    // rather than the ability auto-spending the whole budget.
     client.moves.activateAbility({ lane: 0, targetPlayerID: '1', targetLane: 0 });
     let G = getG(client);
-    expect(G.cardInstances['1:stonebound_sentry'].currentShield).toBe(2); // 6 - 4
+    expect(G.cardInstances['1:stonebound_sentry'].currentShield).toBe(3); // 6 - 3
     expect(G.cardInstances['1:stonebound_sentry'].broken).toBe(false);
+    endTurn(client);
 
     // Turn 2 (player 1): Shadow Fox enters Defense Mode, then forfeits its
     // second move so play returns to player 0 with Shadow Fox still
@@ -152,10 +156,10 @@ describe('Real content integration', () => {
 
     // Turn 3 (player 0): Mesmerize again, now against the defending Shadow
     // Fox — must be capped at 1 Shield lost, exactly like a normal attack
-    // against a Defense-Mode card, not the old flat -4/wipe.
+    // against a Defense-Mode card, not the old flat -3/wipe.
     client.moves.activateAbility({ lane: 0, targetPlayerID: '1', targetLane: 1 });
     G = getG(client);
-    expect(G.cardInstances['1:trickster'].currentShield).toBe(2); // 3 - 1 (capped), not 3 - 4
+    expect(G.cardInstances['1:trickster'].currentShield).toBe(3); // 4 - 1 (capped), not 4 - 3
     expect(G.cardInstances['1:trickster'].broken).toBe(false);
 
     client.stop();

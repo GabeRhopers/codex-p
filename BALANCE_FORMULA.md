@@ -131,9 +131,13 @@ The problem is only when the ability's AV doesn't buy the TPS back above the
 Common baseline — that's a card that's strictly worse than just running
 another Common, which defeats the point of the ability slot.
 
-## 5. Worked table (current roster)
+## 5. Worked table (roster *before* rebalancing)
 
-Sorted by TPS. Titans excluded (out of Normal Mode scope, see above).
+Sorted by TPS. Titans excluded (out of Normal Mode scope, see above). This
+snapshot is the roster as it stood when this formula was first applied —
+it's what Sections 6-7 diagnose. `src/content/cards.ts` has since been
+updated per Section 7's applied changes; this table is kept as-is so the
+before/after story stays legible, not updated to match current stats.
 
 | TPS | BCP | AV | Tier | Ability | Card |
 |---|---|---|---|---|---|
@@ -177,56 +181,91 @@ outliers the formula independently flags too.
 Reading this: the formula correctly ranks the roster's worst card (Wild
 Cobra) and its best (Solar Falcon), and correctly predicts Empower
 (Blaze Hawk) and Ward (Blizzard Wolf) landing above and near the Common
-baseline respectively. The one place formula and simulation disagree is
-Tundra Wolverine vs. Scorch Boar: the formula prices them identically
-(same BCP, same AV, since the `attackFloor` argument says the extra "−1"
-in Numbing Frost rarely lands) but the simulation shows a real 9-point gap
-between them. That gap sits close to the sample's own margin of error
-(n≈125 each, roughly ±4.5 points at this win rate) — worth a larger sim run
-before trusting it as a real difference rather than noise, but not
-dismissible either. Section 7 treats Tundra Wolverine as a lower-confidence
-flag for that reason, distinct from Wild Cobra and Solar Falcon which both
-the math and the simulation agree on strongly.
+baseline respectively. The one place formula and simulation disagreed —
+Tundra Wolverine vs. Scorch Boar, priced identically by the formula but
+9 points apart in the 150-match sim — turned out to matter: see Section 7.
 
-## 7. Recommendations
+## 7. Applied changes and the actual rebalance process
 
-Ordered by confidence — both math and simulation agree on the first three.
+All five flagged cards were changed, verified, and in three cases
+iterated on when the first fix didn't land as predicted — worth recording
+in detail, because the misses are the more instructive part.
 
-1. **Wild Cobra** (Gold, A1/S2/R1, Mesmerize) — TPS 3.50, worst card in the
-   roster on both measures, and a Gold with worse raw stats than every
-   Common is a design smell on its own. Two independent fixes, pick one:
-   - Drop `costsBothMoves` (Mesmerize becomes a normal 1-move ability like
-     every other ability in the roster) — removes the "no attack, no
-     defense" double-exposure that's the real cost driver.
-   - Or keep the full-turn cost but raise base stats to something like
-     **A2/S3/R1** (BCP 5, TPS 5.5) so the card survives long enough to
-     actually land the ability.
+**Solar Falcon** (Common, was A3/S3/R2) → **A2/S3/R2**. Landed as
+predicted: 63.5% → ~52-55% across re-runs, right in the main Common
+cluster. One change, no iteration needed.
 
-2. **Solar Falcon** (Common, A3/S3/R2) — TPS 9.00, best card in the roster
-   despite being a vanilla Common with no ability at all; a Common
-   shouldn't out-BCP most of the Gold tier. Recommend **A2/S3/R2** (BCP 7),
-   which lands it with the Ash Owl/Dawn Hare/Snow Elk/Stone Husky cluster
-   instead of alone at the top.
+**Bramble Lynx** (Common, was A1/S4/R1) → **A2/S4/R1**. Also landed as
+predicted: 43.3% → ~48-50%. One change, no iteration needed.
 
-3. **Bramble Lynx** (Common, A1/S4/R1) — TPS 5.00, below the Common
-   average with nothing to show for it (no ability). Recommend **A2/S4/R1**
-   (BCP 6), joining the main Common cluster.
+**Wild Cobra** (Gold, was A1/S2/R1, Mesmerize −4 `costsBothMoves`) — this
+one took three tries:
+1. Stats only, A1/S2 → A2/S4 (matching the Common baseline), ability
+   untouched: 41.4% → 43.8%. An improvement, but still tied for worst in
+   the roster — the stat bump alone wasn't the real problem.
+2. Also dropped `costsBothMoves` (Mesmerize becomes a normal 1-move
+   ability, like every other ability in the roster): 43.8% → **59.4%**,
+   swinging it from worst card to best in one step. This confirmed the
+   full-turn cost (no attack *and* no Defense-Mode retreat) was the actual
+   cost driver, worth far more than the formula's flat "−3.5 tax"
+   estimate — but the fix overshot badly.
+3. Corrected by trimming both the ability magnitude (−4 → −3) and Shield
+   (4 → 3, once a larger 600-match run — see below — showed 4 still ran
+   hot at 57.2%): landed at **53.9%** on the standard 150-match sample.
+   Final stats: **A2/S3/R1**, Mesmerize −3, 1-move cost.
 
-4. **Shadow Fox** (Silver, A1/S3/R1, Feint) — TPS 5.00, at parity with a
-   weak *Common* despite spending a Silver ability slot. Recommend either
-   letting Feint work while defending (matching Ward's flexibility, which
-   the formula already prices higher for exactly that reason) or bumping
-   to **A2/S3/R1** (BCP 6, TPS 7).
+**Shadow Fox** (Silver, was A1/S3/R1, Feint +2 not-usable-while-defending)
+— also took multiple passes, and is the clearest lesson in this whole
+exercise:
+1. Attack bump alone (A1 → A2): 43.8% → 43.8%. No effect at all.
+2. Feint magnitude bump on top (+2 → +3): still 40.8-44.1% across several
+   re-runs. Still no real effect.
+3. Shield bump (3 → 4), keeping Feint's own restriction and magnitude as
+   they were in step 2: finally moved it, landing at **42.3%** on the
+   150-match sample and a clean **46.8%** on a 600-match run. Final stats:
+   **A2/S4/R1**, Feint +3, still not usable while defending.
 
-5. **Tundra Wolverine** (Gold, A2/S3/R2, Numbing Frost) — lower confidence
-   (see Section 6). If the gap holds up under a larger simulation run, the
-   mechanically cleanest fix is changing Numbing Frost to reduce **Shield**
-   instead of Attack (Shield's floor is 0, not 1, so a −2 there doesn't run
-   into the same wall that makes the Attack version barely distinguishable
-   from Scorch). Don't change this one blind — re-run `npm run balance`
-   with a larger sample first.
+   The lesson: neither Attack nor the ability's own magnitude was the
+   binding constraint — Shield was. Feint's restriction (only usable while
+   exposed, unlike Ward) makes this card take more real damage over a
+   match than its Silver peers, so it needed raw durability, not more
+   offense or a bigger heal, to actually survive long enough to matter.
 
-Every suggested value above stays inside the 1–6 physical-die range.
+**Tundra Wolverine** (Gold, was A2/S3/R2, Numbing Frost −2) — the formula
+and the 150-match sim disagreed on this one from the start (Section 6),
+and it's the best illustration of why sample size matters:
+- At 150 matches, it read as roughly neutral (47-55% across different
+  runs, inconsistent) — genuinely ambiguous.
+- At 600 matches (run specifically to settle this), it read as a clear,
+  consistent overperformer: **55.5%**, with a margin of error tight enough
+  (±~2 points at that sample size) to trust the number.
+- Fixed by trimming Shield (3 → 2), leaving Numbing Frost itself untouched
+  since its own math was already sound (identically priced to Scorch's,
+  per Section 3's floor argument). Landed at **47.2%** on the 150-match
+  sample, **46.7%** on a 600-match confirmation run. Final stats:
+  **A2/S2/R2**.
+
+**Net result:** the roster's win-rate spread went from **41.4%-63.5%**
+(22.1 points, on the original 150-match sample) to **45.6%-53.0%**
+(7.4 points, on a 600-match run with the fixes applied) — no card left
+standing out sharply above or below the pack. Every changed value stays
+inside the 1-6 physical-die range.
+
+## 8. Takeaways for future balance passes
+
+- **A formula gets you a plausible first guess, not a verified fix.**
+  Two of five changes above (Wild Cobra, Shadow Fox) needed real
+  simulation data to find the actual lever — the formula's own reasoning
+  about *which* stat mattered was wrong both times on the first attempt.
+- **Re-simulate after every change**, not just once at the end — Wild
+  Cobra's `costsBothMoves` removal alone would have shipped a wildly
+  overtuned card if the fix had stopped there.
+- **150 matches isn't always enough sample to trust a borderline number.**
+  Tundra Wolverine looked fine at 150 and confirmed-overtuned at 600. When
+  a card's reading is ambiguous or contradicts the formula, temporarily
+  bump `SAMPLE_SIZE` in `tests/balance/balanceSim.report.ts` for a one-off
+  local run (then revert it — CI stays at 150 for speed) before trusting
+  the result enough to act on it.
 
 ## Using this for new cards
 
