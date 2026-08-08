@@ -125,13 +125,16 @@ needs an explicit exception (none do in the MVP roster).
 
 ---
 
-## Advanced Mode (planned)
+## Advanced Mode (dormant, not planned)
 
-Everything below is **not part of Normal Mode** and isn't reachable through
-either current starter deck — no Normal Mode deck contains a Titan. It's kept
-here, fully implemented and tested against synthetic fixtures rather than
-real content, because Advanced Mode is additive: it bundles Titans with
-Seasonal Advantage on top of everything above, not a different ruleset.
+Normal Mode is the game's permanent scope — Advanced Mode is not on the
+roadmap. Everything below is **not part of Normal Mode** and isn't reachable
+through either current starter deck — no Normal Mode deck contains a Titan.
+It's kept here, fully implemented and tested against synthetic fixtures
+rather than real content, purely because removing it outright would mean
+deleting working, tested code for no functional gain — not because it's
+queued up next. Treat it as documentation of dormant capability, not a
+commitment.
 
 ### Titans — board model and destruction
 
